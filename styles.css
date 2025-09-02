@@ -25,8 +25,8 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .company-info-arabic h2 { font-size: 15px; margin: 3px 0; color: #0d47a1; font-weight: bold; }
 .company-info-english h1 { font-size: 22px; margin: 3px 0; color: #0d47a1; text-align: right; font-weight: bold; }
 .logo-container { display: flex; justify-content: center; align-items: center; }
-.logo-circle { width: 150px; height: 150px; border: 3px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: #fff; overflow: hidden; }
-.logo-container img { max-width: 140px; max-height: 140px; object-fit: contain; }
+.logo-circle { width: 200px; height: 200px; border: 3px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: #fff; overflow: hidden; }
+.logo-container img { max-width: 190px; max-height: 190px; object-fit: contain; }
 
 .invoice-title { text-align: center; font-weight: bold; margin: 20px 0; }
 .invoice-title h2 { margin: 0; text-decoration: underline; font-size: 24px; }

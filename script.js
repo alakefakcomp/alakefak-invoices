@@ -609,86 +609,24 @@
     return pdf.output('dataurlstring');
   }
   
-  // Send invoice by email
-  async function sendInvoiceByEmail() {
+  // Send invoice by opening Gmail with pre-filled email
+  function sendInvoiceByEmail() {
     const emailTo = document.getElementById('emailTo').value.trim();
     const emailSubject = document.getElementById('emailSubject').value.trim();
     const emailMessage = document.getElementById('emailMessage').value.trim();
     
-    // Validation
-    if (!emailTo) {
-      alert('❌ Please enter the recipient\'s email address.');
-      return;
-    }
-    if (!emailTo.includes('@')) {
-      alert('❌ Please enter a valid email address.');
-      return;
-    }
-    
     // Auto-fill subject if empty
     const subject = emailSubject || `Invoice #${els.invoiceNumber().value} - Alakefak Furniture Movers`;
-    const message = emailMessage || `Dear Customer,\n\nPlease find attached your invoice.\n\nBest regards,\nAlakefak Furniture Movers`;
+    const message = emailMessage || `Dear Customer,\n\nPlease find attached your invoice #${els.invoiceNumber().value}.\n\nTotal Amount: ${els.grandTotal().textContent}\nInvoice Date: ${els.invoiceDate().value}\n\nPlease download the PDF from our system and attach it manually.\n\nBest regards,\nAlakefak Furniture Movers\nTel: +971 2 5529191\nEmail: alakefakcomp@gmail.com`;
     
-    try {
-      // Show loading state
-      const sendButton = document.querySelector('button[onclick="sendInvoiceByEmail()"]');
-      const originalText = sendButton.innerHTML;
-      sendButton.innerHTML = '⏳ Generating PDF & Sending...';
-      sendButton.disabled = true;
-      
-      // Generate PDF
-      const pdfBase64 = await generatePDFForEmail();
-      
-      // Prepare email data
-      const emailData = {
-        to_email: emailTo,
-        subject: subject,
-        message: message,
-        invoice_number: els.invoiceNumber().value || 'N/A',
-        customer_name: els.billTo().value || 'Valued Customer',
-        invoice_date: els.invoiceDate().value || new Date().toISOString().split('T')[0],
-        grand_total: els.grandTotal().textContent || '0.00 AED',
-        pdf_attachment: pdfBase64,
-        from_name: 'Alakefak Furniture Movers',
-        from_email: 'alakefakcomp@gmail.com'
-      };
-      
-      // Send email using EmailJS - use a simpler service
-      const response = await emailjs.send('default_service', 'template_qwertyui', {
-        to_name: emailData.customer_name,
-        to_email: emailData.to_email,
-        from_name: emailData.from_name,
-        message: emailData.message,
-        subject: emailData.subject,
-        invoice_number: emailData.invoice_number,
-        reply_to: 'alakefakcomp@gmail.com'
-      });
-      
-      // Success
-      sendButton.innerHTML = '✅ Email Sent!';
-      alert(`✅ Invoice successfully sent to ${emailTo}!\n\nThe customer will receive the PDF invoice as an attachment.`);
-      
-      // Reset button after delay
-      setTimeout(() => {
-        sendButton.innerHTML = originalText;
-        sendButton.disabled = false;
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Email sending failed:', error);
-      
-      // Error handling
-      const sendButton = document.querySelector('button[onclick="sendInvoiceByEmail()"]');
-      sendButton.innerHTML = '❌ Send Failed';
-      sendButton.disabled = false;
-      
-      alert(`❌ Failed to send email. Please try again.\n\nError: ${error.message || 'Unknown error'}`);
-      
-      // Reset button after delay
-      setTimeout(() => {
-        sendButton.innerHTML = '📨 Send Invoice by Email';
-      }, 3000);
-    }
+    // Create Gmail compose URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailTo)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    
+    // Open Gmail in new tab
+    window.open(gmailUrl, '_blank');
+    
+    // Show success message
+    alert('📧 Gmail opened with pre-filled email!\n\n✅ The email is ready to send\n\n📎 Don\'t forget to:\n1. Download the PDF first\n2. Attach it to the Gmail\n3. Send the email');
   }
   window.sendInvoiceByEmail = sendInvoiceByEmail;
   
