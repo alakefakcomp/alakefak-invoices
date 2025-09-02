@@ -100,13 +100,29 @@
                         </thead>
                         <tbody id="itemsBody">
                             <tr class="item-row">
-                                <td><input type="text" class="item-input" placeholder="1"></td>
-                                <td><input type="text" class="item-input description-input" placeholder="Service description"></td>
-                                <td><input type="number" class="item-input quantity-input" placeholder="1" min="1"></td>
-                                <td><input type="number" class="item-input rate-input" placeholder="0.00" step="0.01"></td>
-                                <td class="amount-cell">0.00 AED</td>
-                                <td class="vat-cell">0.00 AED</td>
-                                <td class="total-cell">0.00 AED</td>
+                                <td>1</td>
+                                <td>
+                                    <textarea class="description-input" placeholder="Service description..." rows="3"></textarea>
+                                </td>
+                                <td>
+                                    <input type="number" class="quantity-input" value="1" min="1">
+                                </td>
+                                <td>
+                                    <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0">
+                                    <span class="currency">AED</span>
+                                </td>
+                                <td class="amount-cell">
+                                    <span class="amount-value">0</span>
+                                    <span class="currency">AED</span>
+                                </td>
+                                <td class="vat-cell">
+                                    <span class="vat-value">0</span>
+                                    <span class="currency">AED</span>
+                                </td>
+                                <td class="total-cell">
+                                    <span class="total-value">0</span>
+                                    <span class="currency">AED</span>
+                                </td>
                                 <td class="no-print"><button onclick="removeItem(this)" class="btn btn-danger btn-sm">Remove</button></td>
                             </tr>
                         </tbody>
@@ -136,29 +152,32 @@
 
                 <!-- Company Footer -->
                 <div class="company-footer">
-                    <div class="bank-info">
-                        <div class="stamp-container">
-                            <img id="company-stamp" src="" alt="Company Stamp" style="display: none;">
-                        </div>
-                        <div class="bank-details">
-                            <div class="bank-name">ALA KAIFAK FURNITURE MOVERS</div>
-                            <div class="bank-details-text">
-                                <div>BANK: FIRST ABU DHABI BANK</div>
-                                <div>IBAN: AE530351411323477485017</div>
-                                <div>A/C NO: 1411323477485017</div>
+                    <div class="footer-section">
+                        <div class="stamp-area">
+                            <div class="stamp-circle">
+                                <img id="company-stamp" src="" alt="Company Stamp" style="display: none;">
+                            </div>
+                            <div class="signature-line">
+                                <img id="company-signature" src="" alt="Signature" style="display: none;">
                             </div>
                         </div>
-                        <div class="signature-container">
-                            <img id="company-signature" src="" alt="Signature" style="display: none;">
+                        
+                        <div class="bank-details">
+                            <div class="bank-info-box">
+                                <div><strong>ALA KAIFAK FURNITURE MOVERS</strong></div>
+                                <div><strong>BANK: FIRST ABU DHABI BANK</strong></div>
+                                <div><strong>IBAN: AE530351411323477485017</strong></div>
+                                <div><strong>A/C NO: 1411323477485017</strong></div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="contact-info">
-                        <div class="contact-details">
-                            Tel.: +971 2 5529191, Fax: +971 2 5529195, Mob.: +971 50 8199942, P.O.Box: 130483, Abu Dhabi - U.A.E.
+                        <div class="contact-row-top">
+                            Tel.: +971 2 5529191, Fax: +971 2 5529195, Mob.: +971 50 8199942
                         </div>
-                        <div class="email-info">
-                            E-mail: alakefakcomp@gmail.com
+                        <div class="contact-row-bottom">
+                            E-mail: alakefakcomp@gmail.com, P.O.Box: 130483, Abu Dhabi - U.A.E.
                         </div>
                     </div>
                 </div>

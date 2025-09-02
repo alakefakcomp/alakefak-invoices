@@ -66,16 +66,35 @@
   }
 
   function addItem(){
+    const tbody = els.itemsBody();
+    const itemCount = tbody.children.length + 1;
+    
     const tr = document.createElement('tr');
     tr.className = 'item-row';
     tr.innerHTML = `
-      <td><input type="text" class="item-input" placeholder="1"></td>
-      <td><input type="text" class="item-input description-input" placeholder="Service description"></td>
-      <td><input type="number" class="item-input quantity-input" placeholder="1" min="1" value="1"></td>
-      <td><input type="number" class="item-input rate-input" placeholder="0.00" step="0.01"></td>
-      <td class="amount-cell">0.00 AED</td>
-      <td class="vat-cell">0.00 AED</td>
-      <td class="total-cell">0.00 AED</td>
+      <td>${itemCount}</td>
+      <td>
+        <textarea class="description-input" placeholder="Service description..." rows="3"></textarea>
+      </td>
+      <td>
+        <input type="number" class="quantity-input" value="1" min="1">
+      </td>
+      <td>
+        <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0">
+        <span class="currency">AED</span>
+      </td>
+      <td class="amount-cell">
+        <span class="amount-value">0</span>
+        <span class="currency">AED</span>
+      </td>
+      <td class="vat-cell">
+        <span class="vat-value">0</span>
+        <span class="currency">AED</span>
+      </td>
+      <td class="total-cell">
+        <span class="total-value">0</span>
+        <span class="currency">AED</span>
+      </td>
       <td class="no-print"><button onclick="removeItem(this)" class="btn btn-danger btn-sm">Remove</button></td>
     `;
     els.itemsBody().appendChild(tr);
@@ -95,31 +114,44 @@
   function handleInputChange(e) {
     // Trigger recalc immediately when quantity or rate inputs change
     if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
+      calculateItemTotal(e.target.closest('tr'));
       recalc();
     }
+  }
+  
+  function calculateItemTotal(row) {
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+    
+    const amount = quantity * rate;
+    const vat = amount * VAT_RATE; // 5% VAT
+    const total = amount + vat;
+    
+    row.querySelector('.amount-value').textContent = fmt(amount);
+    row.querySelector('.vat-value').textContent = fmt(vat);
+    row.querySelector('.total-value').textContent = fmt(total);
   }
   
   function recalc(){
     let subtotal = 0;
     let totalVat = 0;
+    let grandTotal = 0;
+    
     const rows = els.itemsBody().querySelectorAll('.item-row');
     rows.forEach(row => {
-      const qty = parseFloat(row.querySelector('.quantity-input')?.value || '0');
-      const rate = parseFloat(row.querySelector('.rate-input')?.value || '0');
-      const amount = qty * rate;
-      const vat = amount * VAT_RATE;
-      const total = amount + vat;
-      row.querySelector('.amount-cell').textContent = fmt(amount) + ' AED';
-      row.querySelector('.vat-cell').textContent = fmt(vat) + ' AED';
-      row.querySelector('.total-cell').textContent = fmt(total) + ' AED';
+      const amount = parseFloat(row.querySelector('.amount-value')?.textContent || '0');
+      const vat = parseFloat(row.querySelector('.vat-value')?.textContent || '0');
+      const total = parseFloat(row.querySelector('.total-value')?.textContent || '0');
+      
       subtotal += amount;
       totalVat += vat;
+      grandTotal += total;
     });
+    
     els.subtotal().textContent = fmt(subtotal) + ' AED';
     els.totalVat().textContent = fmt(totalVat) + ' AED';
-    const grand = subtotal + totalVat;
-    els.grandTotal().textContent = fmt(grand) + ' AED';
-    els.amountInWords().textContent = numberToWordsAED(grand) + ' only';
+    els.grandTotal().textContent = fmt(grandTotal) + ' AED';
+    els.amountInWords().textContent = numberToWordsAED(grandTotal) + ' only';
   }
 
   function fmt(n){ 
