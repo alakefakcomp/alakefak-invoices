@@ -16,14 +16,17 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .btn-sm { padding: 4px 8px; font-size: 12px; }
 
 .invoice-container { background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-.invoice-content { background: #fff; padding: 12px; border: 2px solid #c0cbd7; border-radius: 12px; }
+.invoice-content { background: #fff; padding: 20px; border: 2px solid #000; border-radius: 15px; }
 
-.company-header { border-bottom: 2px solid #c0cbd7; padding-bottom: 8px; }
+.company-header { border-bottom: 1px solid #000; padding-bottom: 15px; margin-bottom: 15px; }
 .header-content { display: flex; justify-content: space-between; align-items: center; }
-.company-info-arabic h1 { font-size: 22px; margin: 0; color: #0d47a1; }
-.company-info-arabic h2 { font-size: 16px; margin: 0; color: #0d47a1; }
-.company-info-english h1 { font-size: 22px; margin: 0; color: #0d47a1; text-align: right; }
-.logo-container img { height: 60px; }
+.company-info-arabic { text-align: left; }
+.company-info-arabic h1 { font-size: 20px; margin: 2px 0; color: #0d47a1; font-weight: bold; }
+.company-info-arabic h2 { font-size: 14px; margin: 2px 0; color: #0d47a1; }
+.company-info-english h1 { font-size: 20px; margin: 2px 0; color: #0d47a1; text-align: right; font-weight: bold; }
+.logo-container { display: flex; justify-content: center; align-items: center; }
+.logo-circle { width: 80px; height: 80px; border: 2px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: #fff; }
+.logo-container img { max-width: 70px; max-height: 70px; }
 
 .invoice-title { text-align: center; font-weight: bold; margin: 10px 0; }
 .invoice-title h2 { margin: 0; text-decoration: underline; }
@@ -53,11 +56,11 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .totals-amounts span { display: inline-block; width: 100px; text-align: right; margin-left: 12px; }
 .amount-words { color: #e53935; margin-top: 6px; font-weight: bold; text-decoration: underline; }
 
-.company-footer { margin-top: 16px; border-top: 2px solid #c0cbd7; padding-top: 8px; }
-.bank-info { display: grid; grid-template-columns: 120px 1fr 160px; gap: 12px; align-items: center; }
-.bank-details { border: 3px solid #2f74c0; padding: 8px; color: #2f74c0; font-weight: bold; }
-.bank-name { font-size: 16px; margin-bottom: 4px; }
-.bank-details-text div { margin-bottom: 2px; }
+.company-footer { margin-top: 20px; border-top: 1px solid #000; padding-top: 15px; }
+.bank-info { display: grid; grid-template-columns: 100px 300px 120px; gap: 15px; align-items: center; justify-content: center; }
+.bank-details { border: 2px solid #2f74c0; padding: 6px 8px; color: #2f74c0; font-weight: bold; font-size: 12px; }
+.bank-name { font-size: 13px; margin-bottom: 3px; }
+.bank-details-text div { margin-bottom: 1px; font-size: 11px; }
 .stamp-container img { max-width: 110px; opacity: 0.95; }
 .signature-container img { max-height: 70px; }
 

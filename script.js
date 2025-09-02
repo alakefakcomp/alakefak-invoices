@@ -52,16 +52,10 @@
 
   function nextInvoiceNumber(){
     const key = 'alakefak_invoice_counter';
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = pad(today.getMonth()+1,2);
-    const d = pad(today.getDate(),2);
-    let counterData = JSON.parse(localStorage.getItem(key) || '{}');
-    const datePrefix = `${y}${m}${d}`;
-    const current = counterData.date === datePrefix ? (counterData.seq||0)+1 : 1;
-    counterData = { date: datePrefix, seq: current };
-    localStorage.setItem(key, JSON.stringify(counterData));
-    return `${datePrefix}-${pad(current,3)}`; // e.g., 20250902-001
+    let counter = parseInt(localStorage.getItem(key) || '1633'); // Start from 1633 like your example
+    counter += 1;
+    localStorage.setItem(key, counter.toString());
+    return counter.toString(); // e.g., 1634, 1635, etc.
   }
 
   function addItem(){
