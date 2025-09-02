@@ -175,8 +175,9 @@
   }
 
   function fmt(n){ 
-    const formatted = (Math.round(n * 100) / 100).toFixed(2);
-    return parseFloat(formatted).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (isNaN(n) || n === null || n === undefined) return '0.00';
+    const num = parseFloat(n);
+    return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   }
 
   // Convert numbers to words (enhanced for large numbers up to 100,000 AED)
@@ -511,10 +512,17 @@
   // Size adjustment functions
   function adjustLogoSize(size) {
     const logo = els.logo();
-    if (logo.src) {
-      logo.style.maxWidth = size + 'px';
-      logo.style.maxHeight = size + 'px';
+    // Update the logo size whether it has a src or not
+    logo.style.maxWidth = size + 'px';
+    logo.style.maxHeight = size + 'px';
+    
+    // Also update the CSS rule for future uploads
+    const logoContainer = document.querySelector('.logo-container img');
+    if (logoContainer) {
+      logoContainer.style.maxWidth = size + 'px';
+      logoContainer.style.maxHeight = size + 'px';
     }
+    
     document.getElementById('logoSizeValue').textContent = size + 'px';
   }
   window.adjustLogoSize = adjustLogoSize;
