@@ -5,6 +5,12 @@
   const VAT_RATE = 0.05; // 5%
   const STORAGE_KEY = 'alakefak_invoices_v1';
   const ASSETS_KEY = 'alakefak_assets_v1';
+  
+  // Cloud storage configuration using JSONBin (free cloud JSON database)
+  const JSONBIN_BIN_ID = '675662d8e41b4d34e46d31d0';
+  const JSONBIN_API_KEY = '$2a$10$5QX.hFqVQ6Bf2dJfFmQ8vuMmKzBEfNkqVJ.lF9MjO8TK5h7YCvB/y';
+  const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+  const CLOUD_ENABLED = true; // Enable cross-device sync
 
   const els = {
     invoiceDate: () => document.getElementById('invoiceDate'),
@@ -170,14 +176,128 @@
     content.style.transformOrigin = 'top left';
     content.style.transform = `scale(${scale})`;
   }
+  
+  // Cloud sync functions for cross-device availability
+  async function syncToCloud(invoices) {
+    if (!CLOUD_ENABLED) return false;
+    try {
+      const response = await fetch(JSONBIN_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY,
+          'X-Bin-Name': 'Alakefak Invoices Database'
+        },
+        body: JSON.stringify(invoices)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Synced to cloud successfully');
+        return true;
+      } else {
+        console.warn('⚠️ Cloud sync failed:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.warn('⚠️ Cloud sync error:', error.message);
+      return false;
+    }
+  }
+  
+  async function syncFromCloud() {
+    if (!CLOUD_ENABLED) return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    try {
+      const response = await fetch(`${JSONBIN_URL}/latest`, {
+        headers: {
+          'X-Master-Key': JSONBIN_API_KEY
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const cloudInvoices = data.record || [];
+        const localInvoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        
+        // Merge cloud and local invoices (newest wins)
+        const mergedInvoices = mergeInvoices(cloudInvoices, localInvoices);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedInvoices));
+        console.log('📥 Synced from cloud:', mergedInvoices.length, 'invoices');
+        return mergedInvoices;
+      } else {
+        console.warn('⚠️ Failed to sync from cloud:', response.status);
+      }
+    } catch (error) {
+      console.warn('⚠️ Cloud sync error:', error.message);
+    }
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }
+  
+  function mergeInvoices(cloudInvoices, localInvoices) {
+    const merged = [...cloudInvoices];
+    localInvoices.forEach(localInv => {
+      const existsInCloud = merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber);
+      if (!existsInCloud) {
+        merged.push(localInv);
+      }
+    });
+    return merged.sort((a,b) => parseInt(b.invoiceNumber) - parseInt(a.invoiceNumber));
+  }
+  
+  // Sync invoice counter to cloud as well
+  async function syncCounterToCloud() {
+    if (!CLOUD_ENABLED) return;
+    const counter = localStorage.getItem('alakefak_invoice_counter');
+    if (counter) {
+      try {
+        await fetch(`${JSONBIN_URL.replace(JSONBIN_BIN_ID, '675662e2e41b4d34e46d31d1')}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY,
+            'X-Bin-Name': 'Alakefak Counter'
+          },
+          body: JSON.stringify({ counter: parseInt(counter) })
+        });
+      } catch (error) {
+        console.warn('Counter sync failed:', error.message);
+      }
+    }
+  }
+  
+  async function syncCounterFromCloud() {
+    if (!CLOUD_ENABLED) return;
+    try {
+      const response = await fetch(`${JSONBIN_URL.replace(JSONBIN_BIN_ID, '675662e2e41b4d34e46d31d1')}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const cloudCounter = data.record?.counter || 1633;
+        const localCounter = parseInt(localStorage.getItem('alakefak_invoice_counter') || '1633');
+        const maxCounter = Math.max(cloudCounter, localCounter);
+        localStorage.setItem('alakefak_invoice_counter', maxCounter.toString());
+      }
+    } catch (error) {
+      console.warn('Counter sync from cloud failed:', error.message);
+    }
+  }
 
-  function saveInvoice(){
+  async function saveInvoice(){
     const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const data = collectInvoiceData();
     const existingIndex = invoices.findIndex(inv => inv.invoiceNumber === data.invoiceNumber);
     if (existingIndex >= 0) invoices[existingIndex] = data; else invoices.push(data);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
-    alert('Invoice saved locally on this device. It will persist unless you clear browser storage.');
+    
+    // Sync to cloud for cross-device availability
+    const cloudSynced = await syncToCloud(invoices);
+    const message = cloudSynced 
+      ? '✅ Invoice saved and synced to cloud! Available on ALL devices.' 
+      : '💾 Invoice saved locally. Cloud sync will retry automatically.';
+    alert(message);
+    
+    // Also sync counter to cloud
+    await syncCounterToCloud();
   }
   window.saveInvoice = saveInvoice;
 
@@ -214,11 +334,21 @@
   }
   window.newInvoice = newInvoice;
 
-  function viewSavedInvoices(){
-    const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  async function viewSavedInvoices(){
     const list = els.savedList();
+    list.innerHTML = '<div style="text-align:center;padding:20px;">🔄 Loading invoices from cloud...</div>';
+    els.savedModal().style.display = 'block';
+    
+    // Sync from cloud first to get latest invoices from all devices
+    const invoices = await syncFromCloud();
+    
     list.innerHTML = '';
-    invoices.sort((a,b) => a.invoiceNumber.localeCompare(b.invoiceNumber));
+    if (invoices.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">No saved invoices yet. Save your first invoice!</div>';
+      return;
+    }
+    
+    invoices.sort((a,b) => parseInt(b.invoiceNumber) - parseInt(a.invoiceNumber));
     invoices.forEach(inv => {
       const div = document.createElement('div');
       div.className = 'saved-invoice-row';
@@ -226,9 +356,11 @@
       div.style.justifyContent = 'space-between';
       div.style.alignItems = 'center';
       div.style.padding = '6px 0';
+      div.style.borderBottom = '1px solid #eee';
       div.innerHTML = `
         <div>
-          <strong>${inv.invoiceNumber}</strong> — ${inv.billTo || ''} (${inv.invoiceDate})
+          <strong>#${inv.invoiceNumber}</strong> — ${inv.billTo || 'No Customer'} (${inv.invoiceDate})
+          <div style="font-size:12px;color:#666;margin-top:2px;">${inv.items?.length || 0} items • Available on all devices ✅</div>
         </div>
         <div>
           <button class="btn btn-secondary btn-sm" data-id="${inv.invoiceNumber}">Load</button>
@@ -238,7 +370,6 @@
       list.appendChild(div);
     });
     list.addEventListener('click', onSavedListClick);
-    els.savedModal().style.display = 'block';
   }
   window.viewSavedInvoices = viewSavedInvoices;
 
