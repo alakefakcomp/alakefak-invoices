@@ -49,7 +49,8 @@
 
     // Attach listeners for real-time calculation
     els.itemsBody().addEventListener('input', handleInputChange);
-    els.itemsBody().addEventListener('change', recalc);
+    els.itemsBody().addEventListener('change', handleInputChange);
+    els.itemsBody().addEventListener('blur', handleInputBlur, true);
     
     // Add auto-expanding textareas
     setupAutoExpanding();
@@ -135,7 +136,17 @@
   function handleInputChange(e) {
     // Trigger recalc immediately when quantity or rate inputs change
     if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
-      calculateItemTotal(e.target.closest('tr'));
+      const row = e.target.closest('tr');
+      calculateItemTotal(row);
+      recalc();
+    }
+  }
+  
+  // Also recalculate on blur to ensure we catch all changes
+  function handleInputBlur(e) {
+    if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
+      const row = e.target.closest('tr');
+      calculateItemTotal(row);
       recalc();
     }
   }
@@ -159,8 +170,12 @@
     
     const rows = els.itemsBody().querySelectorAll('.item-row');
     rows.forEach(row => {
-      const amount = parseFloat(row.querySelector('.amount-value')?.textContent || '0');
-      const vat = parseFloat(row.querySelector('.vat-value')?.textContent || '0');
+      // Parse formatted numbers by removing commas first
+      const amountText = row.querySelector('.amount-value')?.textContent || '0';
+      const vatText = row.querySelector('.vat-value')?.textContent || '0';
+      
+      const amount = parseFloat(amountText.replace(/,/g, '')) || 0;
+      const vat = parseFloat(vatText.replace(/,/g, '')) || 0;
       
       subtotal += amount;
       totalVat += vat;
@@ -560,9 +575,143 @@
     changeTemplate();
   }
 
+  // Initialize EmailJS
+  function initEmailJS() {
+    emailjs.init('qOz8eVnmhzJmEPjld'); // Public key for EmailJS
+  }
+  
+  // Generate PDF as base64 for email attachment
+  async function generatePDFForEmail() {
+    const content = els.content();
+    // Temporarily remove dashed input borders for PDF aesthetics
+    const inputs = content.querySelectorAll('input');
+    inputs.forEach(i => i.style.borderBottom = '1px solid transparent');
+
+    const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210; const pageHeight = 297;
+
+    // Calculate scale to fit one page
+    const imgProps = { width: canvas.width, height: canvas.height };
+    const ratio = Math.min(pageWidth / (imgProps.width/4), pageHeight / (imgProps.height/4));
+    const width = (imgProps.width/4) * ratio;
+    const height = (imgProps.height/4) * ratio;
+    const x = (pageWidth - width)/2;
+    const y = 0;
+
+    pdf.addImage(imgData, 'PNG', x, y, width, height);
+    
+    // Restore borders
+    inputs.forEach(i => i.style.borderBottom = '1px dashed #999');
+    
+    // Return PDF as base64 string
+    return pdf.output('dataurlstring');
+  }
+  
+  // Send invoice by email
+  async function sendInvoiceByEmail() {
+    const emailTo = document.getElementById('emailTo').value.trim();
+    const emailSubject = document.getElementById('emailSubject').value.trim();
+    const emailMessage = document.getElementById('emailMessage').value.trim();
+    
+    // Validation
+    if (!emailTo) {
+      alert('❌ Please enter the recipient\'s email address.');
+      return;
+    }
+    if (!emailTo.includes('@')) {
+      alert('❌ Please enter a valid email address.');
+      return;
+    }
+    
+    // Auto-fill subject if empty
+    const subject = emailSubject || `Invoice #${els.invoiceNumber().value} - Alakefak Furniture Movers`;
+    const message = emailMessage || `Dear Customer,\n\nPlease find attached your invoice.\n\nBest regards,\nAlakefak Furniture Movers`;
+    
+    try {
+      // Show loading state
+      const sendButton = document.querySelector('button[onclick="sendInvoiceByEmail()"]');
+      const originalText = sendButton.innerHTML;
+      sendButton.innerHTML = '⏳ Generating PDF & Sending...';
+      sendButton.disabled = true;
+      
+      // Generate PDF
+      const pdfBase64 = await generatePDFForEmail();
+      
+      // Prepare email data
+      const emailData = {
+        to_email: emailTo,
+        subject: subject,
+        message: message,
+        invoice_number: els.invoiceNumber().value || 'N/A',
+        customer_name: els.billTo().value || 'Valued Customer',
+        invoice_date: els.invoiceDate().value || new Date().toISOString().split('T')[0],
+        grand_total: els.grandTotal().textContent || '0.00 AED',
+        pdf_attachment: pdfBase64,
+        from_name: 'Alakefak Furniture Movers',
+        from_email: 'alakefakcomp@gmail.com'
+      };
+      
+      // Send email using EmailJS
+      const response = await emailjs.send('service_j8x7qcr', 'template_invoice', emailData);
+      
+      // Success
+      sendButton.innerHTML = '✅ Email Sent!';
+      alert(`✅ Invoice successfully sent to ${emailTo}!\n\nThe customer will receive the PDF invoice as an attachment.`);
+      
+      // Reset button after delay
+      setTimeout(() => {
+        sendButton.innerHTML = originalText;
+        sendButton.disabled = false;
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Email sending failed:', error);
+      
+      // Error handling
+      const sendButton = document.querySelector('button[onclick="sendInvoiceByEmail()"]');
+      sendButton.innerHTML = '❌ Send Failed';
+      sendButton.disabled = false;
+      
+      alert(`❌ Failed to send email. Please try again.\n\nError: ${error.message || 'Unknown error'}`);
+      
+      // Reset button after delay
+      setTimeout(() => {
+        sendButton.innerHTML = '📨 Send Invoice by Email';
+      }, 3000);
+    }
+  }
+  window.sendInvoiceByEmail = sendInvoiceByEmail;
+  
+  // Auto-fill email fields when invoice data changes
+  function updateEmailFields() {
+    const invoiceNumber = els.invoiceNumber().value;
+    const customerName = els.billTo().value;
+    
+    if (invoiceNumber) {
+      const subjectField = document.getElementById('emailSubject');
+      if (!subjectField.value || subjectField.value.includes('Invoice #')) {
+        subjectField.value = `Invoice #${invoiceNumber} - Alakefak Furniture Movers`;
+      }
+    }
+    
+    if (customerName) {
+      const messageField = document.getElementById('emailMessage');
+      if (!messageField.value || messageField.value.includes('Dear Customer')) {
+        messageField.value = `Dear ${customerName},\n\nThank you for choosing Alakefak Furniture Movers.\n\nPlease find attached your invoice #${invoiceNumber}.\n\nBest regards,\nAlakefak Furniture Movers Team`;
+      }
+    }
+  }
+  
   // Initialize when DOM loaded
   document.addEventListener('DOMContentLoaded', () => {
     init();
     loadTemplatePreference();
+    initEmailJS();
+    
+    // Auto-update email fields when invoice data changes
+    els.invoiceNumber().addEventListener('input', updateEmailFields);
+    els.billTo().addEventListener('input', updateEmailFields);
   });
 })();

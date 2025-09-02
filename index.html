@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alakefak Furniture Movers - Invoice Generator</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -191,6 +192,26 @@
                 <button onclick="generatePDF()" class="btn btn-success">Generate & Download PDF</button>
                 <button onclick="saveInvoice()" class="btn btn-primary">Save Invoice</button>
                 <button onclick="printInvoice()" class="btn btn-secondary">Print Invoice</button>
+            </div>
+            
+            <div class="panel-section">
+                <h3>📧 Email Invoice</h3>
+                <div class="email-form">
+                    <div class="email-group">
+                        <label for="emailTo">Send To:</label>
+                        <input type="email" id="emailTo" class="form-input" placeholder="customer@example.com" style="margin-bottom: 8px;">
+                    </div>
+                    <div class="email-group">
+                        <label for="emailSubject">Subject:</label>
+                        <input type="text" id="emailSubject" class="form-input" placeholder="Invoice #1234 - Alakefak Furniture Movers" style="margin-bottom: 8px;">
+                    </div>
+                    <div class="email-group">
+                        <label for="emailMessage">Message:</label>
+                        <textarea id="emailMessage" class="form-input" rows="3" placeholder="Dear Customer,&#10;&#10;Please find attached your invoice.&#10;&#10;Best regards,&#10;Alakefak Furniture Movers" style="margin-bottom: 10px; resize: vertical;"></textarea>
+                    </div>
+                    <button onclick="sendInvoiceByEmail()" class="btn btn-primary" style="width: 100%;">📨 Send Invoice by Email</button>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">✅ Free email service - works directly from browser</small>
+                </div>
             </div>
             
             <div class="panel-section">
