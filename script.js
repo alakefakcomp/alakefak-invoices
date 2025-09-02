@@ -375,18 +375,60 @@
   }
 
   async function saveInvoice(){
-    const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    console.log('💾 STARTING SAVE PROCESS...');
+    
+    // Get current data
     const data = collectInvoiceData();
+    console.log('📋 Data to save:', data);
+    
+    if (!data.invoiceNumber) {
+      alert('❌ Please enter an invoice number!');
+      return;
+    }
+    
+    // Get existing invoices
+    const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    console.log('📚 Existing invoices:', invoices.length);
+    
+    // Find if invoice already exists
     const existingIndex = invoices.findIndex(inv => inv.invoiceNumber === data.invoiceNumber);
-    if (existingIndex >= 0) invoices[existingIndex] = data; else invoices.push(data);
+    
+    if (existingIndex >= 0) {
+      console.log('📝 Updating existing invoice at index:', existingIndex);
+      invoices[existingIndex] = data;
+    } else {
+      console.log('➕ Adding new invoice');
+      invoices.push(data);
+    }
+    
+    // Save to localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
+    console.log('💾 Saved to localStorage, total invoices:', invoices.length);
+    
+    // Verify it was saved
+    const verification = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const savedInvoice = verification.find(inv => inv.invoiceNumber === data.invoiceNumber);
+    console.log('✅ VERIFICATION - Invoice saved:', !!savedInvoice);
+    
+    if (savedInvoice) {
+      console.log('✅ VERIFICATION - Saved data:', savedInvoice);
+      alert(`✅ Invoice #${data.invoiceNumber} saved successfully!\n\n📋 Items saved: ${data.items.length}\n📝 Customer: ${data.billTo || 'No customer'}`);
+    } else {
+      alert('❌ Error: Invoice was not saved properly!');
+      return;
+    }
     
     // Sync to cloud for cross-device availability
-    const cloudSynced = await syncToCloud(invoices);
-    const message = cloudSynced 
-      ? '✅ Invoice saved and synced to cloud! Available on ALL devices.' 
-      : '💾 Invoice saved locally. Cloud sync will retry automatically.';
-    alert(message);
+    try {
+      const cloudSynced = await syncToCloud(invoices);
+      if (cloudSynced) {
+        console.log('☁️ Cloud sync successful');
+      } else {
+        console.log('⚠️ Cloud sync failed, but local save OK');
+      }
+    } catch (error) {
+      console.log('⚠️ Cloud sync error:', error);
+    }
     
     // Also sync counter to cloud
     await syncCounterToCloud();
@@ -395,24 +437,40 @@
 
   function collectInvoiceData(){
     const items = [];
-    els.itemsBody().querySelectorAll('.item-row').forEach(row => {
+    els.itemsBody().querySelectorAll('.item-row').forEach((row, index) => {
+      const description = row.querySelector('.description-input');
+      const quantity = row.querySelector('.quantity-input');
+      const rate = row.querySelector('.rate-input');
+      
       items.push({
-        item: row.querySelector('td:nth-child(1) input')?.value || '',
-        description: row.querySelector('.description-input')?.value || '',
-        quantity: parseFloat(row.querySelector('.quantity-input')?.value || '0'),
-        rate: parseFloat(row.querySelector('.rate-input')?.value || '0'),
+        item: (index + 1).toString(), // Item number
+        description: description ? description.value : '',
+        quantity: quantity ? parseFloat(quantity.value) || 0 : 0,
+        rate: rate ? parseFloat(rate.value) || 0 : 0,
       });
     });
-    return {
-      invoiceNumber: els.invoiceNumber().value,
-      invoiceDate: els.invoiceDate().value,
-      billTo: els.billTo().value,
-      trn: els.trn().value,
-      address: els.address().value,
-      box: els.box().value,
-      companyTrn: els.companyTrn().value,
-      items,
+    
+    // Get all form data
+    const data = {
+      invoiceNumber: els.invoiceNumber().value || '',
+      invoiceDate: els.invoiceDate().value || '',
+      billTo: els.billTo().value || '',
+      trn: els.trn().value || '',
+      address: els.address().value || 'Abu Dhabi',
+      box: els.box().value || '130483',
+      companyTrn: els.companyTrn().value || '100234725800003',
+      items: items,
+      // Add calculated totals
+      subtotal: els.subtotal().textContent || '0.00 AED',
+      totalVat: els.totalVat().textContent || '0.00 AED',
+      grandTotal: els.grandTotal().textContent || '0.00 AED',
+      amountInWords: els.amountInWords().textContent || 'Zero AED only',
+      // Save timestamp
+      savedAt: new Date().toISOString()
     };
+    
+    console.log('📋 Collecting invoice data:', data);
+    return data;
   }
 
   function newInvoice(){
@@ -477,23 +535,125 @@
   }
 
   function loadInvoice(inv){
-    els.invoiceNumber().value = inv.invoiceNumber;
-    els.invoiceDate().value = inv.invoiceDate;
+    console.log('📋 STARTING LOAD PROCESS...');
+    console.log('📋 Invoice data to load:', inv);
+    
+    if (!inv) {
+      alert('❌ Error: No invoice data to load!');
+      return;
+    }
+    
+    // Restore basic invoice data with detailed logging
+    console.log('Setting invoice number:', inv.invoiceNumber);
+    els.invoiceNumber().value = inv.invoiceNumber || '';
+    
+    console.log('Setting invoice date:', inv.invoiceDate);
+    els.invoiceDate().value = inv.invoiceDate || '';
+    
+    console.log('Setting bill to:', inv.billTo);
     els.billTo().value = inv.billTo || '';
+    
+    console.log('Setting TRN:', inv.trn);
     els.trn().value = inv.trn || '';
+    
+    console.log('Setting address:', inv.address);
     els.address().value = inv.address || 'Abu Dhabi';
+    
+    console.log('Setting box:', inv.box);
     els.box().value = inv.box || '130483';
+    
+    console.log('Setting company TRN:', inv.companyTrn);
     els.companyTrn().value = inv.companyTrn || '100234725800003';
+    
+    // Clear existing items first
+    console.log('Clearing existing items...');
     els.itemsBody().innerHTML = '';
-    (inv.items||[]).forEach(it => {
+    
+    // Restore items with detailed logging
+    console.log('Items to restore:', inv.items);
+    
+    if (inv.items && Array.isArray(inv.items) && inv.items.length > 0) {
+      console.log(`Restoring ${inv.items.length} items...`);
+      
+      inv.items.forEach((item, index) => {
+        console.log(`Restoring item ${index + 1}:`, item);
+        
+        // Add new row
+        addItem();
+        const row = els.itemsBody().lastElementChild;
+        
+        if (!row) {
+          console.error('Failed to create new row!');
+          return;
+        }
+        
+        // Set description with better handling
+        const descInput = row.querySelector('.description-input');
+        console.log('Description input found:', !!descInput);
+        console.log('Item description:', item.description);
+        
+        if (descInput) {
+          descInput.value = item.description || '';
+          console.log('Description set to:', descInput.value);
+          
+          // Force textarea to expand properly
+          setTimeout(() => {
+            descInput.style.height = 'auto';
+            descInput.style.height = (descInput.scrollHeight + 10) + 'px';
+            console.log('Description textarea height set to:', descInput.style.height);
+          }, 50);
+        }
+        
+        // Set quantity
+        const qtyInput = row.querySelector('.quantity-input');
+        if (qtyInput) {
+          qtyInput.value = item.quantity || 1;
+          console.log('Quantity set to:', qtyInput.value);
+        }
+        
+        // Set rate
+        const rateInput = row.querySelector('.rate-input');
+        if (rateInput) {
+          rateInput.value = item.rate || 0;
+          console.log('Rate set to:', rateInput.value);
+        }
+      });
+    } else {
+      console.log('No items to restore, adding empty item');
       addItem();
-      const last = els.itemsBody().lastElementChild;
-      last.querySelector('td:nth-child(1) input').value = it.item || '';
-      last.querySelector('.description-input').value = it.description || '';
-      last.querySelector('.quantity-input').value = it.quantity || 1;
-      last.querySelector('.rate-input').value = it.rate || 0;
-    });
-    recalc();
+    }
+    
+    // Force auto-expand for Bill To field
+    const billToField = els.billTo();
+    if (billToField && billToField.value) {
+      console.log('Expanding Bill To field...');
+      setTimeout(() => {
+        billToField.style.height = 'auto';
+        billToField.style.height = (billToField.scrollHeight + 10) + 'px';
+      }, 100);
+    }
+    
+    // Recalculate totals with delay to ensure DOM is updated
+    console.log('Recalculating totals...');
+    setTimeout(() => {
+      recalc();
+      
+      // Verify the load was successful
+      const currentItems = els.itemsBody().querySelectorAll('.item-row');
+      console.log(`✅ LOAD COMPLETE - Restored ${currentItems.length} items`);
+      
+      // Force all textareas to expand one more time
+      currentItems.forEach((row, index) => {
+        const descInput = row.querySelector('.description-input');
+        if (descInput && descInput.value) {
+          descInput.style.height = 'auto';
+          descInput.style.height = (descInput.scrollHeight + 10) + 'px';
+          console.log(`Final expansion for item ${index + 1}:`, descInput.style.height);
+        }
+      });
+      
+      alert(`✅ Invoice #${inv.invoiceNumber} loaded successfully!\n\n📋 Items loaded: ${currentItems.length}\n📝 Customer: ${inv.billTo || 'No customer'}`);
+    }, 200);
   }
 
   function closeSavedInvoicesModal(){ els.savedModal().style.display = 'none'; }
@@ -650,16 +810,124 @@
     }
   }
   
+  // Mobile device detection and optimization
+  function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           (window.innerWidth <= 768);
+  }
+  
+  function optimizeForMobile() {
+    if (isMobileDevice()) {
+      console.log('📱 Mobile device detected - optimizing UI');
+      
+      // Add mobile-specific CSS class to body
+      document.body.classList.add('mobile-device');
+      
+      // Add mobile viewport meta tag if not present
+      if (!document.querySelector('meta[name="viewport"]')) {
+        const viewport = document.createElement('meta');
+        viewport.name = 'viewport';
+        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.head.appendChild(viewport);
+      }
+      
+      // Optimize touch interactions
+      document.addEventListener('touchstart', function() {}, { passive: true });
+      
+      // Auto-focus prevention on mobile (prevents zoom on input focus)
+      const inputs = document.querySelectorAll('input, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          if (window.innerWidth <= 768) {
+            this.blur();
+            setTimeout(() => this.focus(), 100);
+          }
+        });
+      });
+      
+      // Mobile-specific table handling
+      const itemsTable = document.querySelector('.items-table');
+      if (itemsTable) {
+        itemsTable.style.fontSize = '10px';
+        // Add horizontal scroll hint
+        const scrollHint = document.createElement('div');
+        scrollHint.innerHTML = '← Swipe left/right to see all columns →';
+        scrollHint.style.cssText = 'text-align: center; font-size: 11px; color: #666; margin-bottom: 10px; padding: 5px; background: #f0f0f0; border-radius: 4px;';
+        itemsTable.parentNode.insertBefore(scrollHint, itemsTable);
+      }
+      
+      // Optimize buttons for touch
+      const buttons = document.querySelectorAll('.btn');
+      buttons.forEach(btn => {
+        btn.style.minHeight = '44px'; // Apple's recommended touch target size
+        btn.style.padding = '12px 16px';
+      });
+      
+      // Show mobile-specific notifications
+      showMobileWelcome();
+    }
+  }
+  
+  function showMobileWelcome() {
+    // Only show once per session
+    if (sessionStorage.getItem('mobile_welcome_shown')) return;
+    
+    setTimeout(() => {
+      alert('📱 Mobile Mode Active!\n\n✅ Optimized for your phone\n📊 Swipe tables left/right\n☁️ Cloud sync enabled\n\nEnjoy creating invoices on mobile!');
+      sessionStorage.setItem('mobile_welcome_shown', 'true');
+    }, 2000);
+  }
+  
+  // Enhanced cloud sync with mobile notification
+  async function forceCloudSyncWithStatus() {
+    const statusDiv = document.createElement('div');
+    statusDiv.innerHTML = '🔄 Syncing with cloud...';
+    statusDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1000; font-size: 14px;';
+    document.body.appendChild(statusDiv);
+    
+    try {
+      await syncFromCloud();
+      await syncCounterFromCloud();
+      
+      const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      statusDiv.innerHTML = `✅ Synced! ${invoices.length} invoices available`;
+      statusDiv.style.background = '#2e7d32';
+      
+      setTimeout(() => statusDiv.remove(), 2000);
+    } catch (error) {
+      statusDiv.innerHTML = '⚠️ Sync failed - working offline';
+      statusDiv.style.background = '#c62828';
+      setTimeout(() => statusDiv.remove(), 3000);
+    }
+  }
+  
+  // AGGRESSIVE cloud sync - run every 30 seconds
+  setInterval(async () => {
+    console.log('🔄 Auto-syncing from cloud...');
+    await syncFromCloud();
+  }, 30000); // Every 30 seconds
+  
   // Initialize when DOM loaded
   document.addEventListener('DOMContentLoaded', async () => {
     init();
     loadTemplatePreference();
     initEmailJS();
     
-    // FORCE immediate cloud sync on every page load
+    // Optimize for mobile devices
+    optimizeForMobile();
+    
+    // FORCE immediate cloud sync on every page load with mobile-friendly status
     console.log('🔄 Force syncing from cloud on startup...');
-    await syncFromCloud();
-    await syncCounterFromCloud();
+    if (isMobileDevice()) {
+      await forceCloudSyncWithStatus();
+    } else {
+      await syncFromCloud();
+      await syncCounterFromCloud();
+    }
+    
+    // Show sync status
+    const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    console.log(`📋 Found ${invoices.length} invoices locally`);
     
     // Auto-update email fields when invoice data changes
     els.invoiceNumber().addEventListener('input', updateEmailFields);

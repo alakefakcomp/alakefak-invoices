@@ -1,6 +1,6 @@
 /* Reset and base styles */
 * { box-sizing: border-box; }
-body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; background: #f6f7fb; }
+body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; background: #ffffff; }
 
 .navbar { background: #0d47a1; color: #fff; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
 .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto; }
@@ -17,14 +17,7 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 
 .invoice-container { background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
 .invoice-content { 
-  background: #fff; 
-  background-image: 
-    linear-gradient(45deg, rgba(58, 123, 210, 0.03) 25%, transparent 25%), 
-    linear-gradient(-45deg, rgba(58, 123, 210, 0.03) 25%, transparent 25%), 
-    linear-gradient(45deg, transparent 75%, rgba(58, 123, 210, 0.03) 75%), 
-    linear-gradient(-45deg, transparent 75%, rgba(58, 123, 210, 0.03) 75%);
-  background-size: 40px 40px;
-  background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+  background: #ffffff; 
   padding: 25px; 
   border: 2px solid #000; 
   border-radius: 15px; 
@@ -61,7 +54,20 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .items-table th, .items-table td { border: 2px solid #000; padding: 10px; vertical-align: top; }
 .items-table th { background: #eaf2ff; font-weight: bold; text-align: center; }
 .item-input { width: 100%; border: 0; outline: none; padding: 8px; font-size: 13px; }
-.description-input { width: 100%; border: none; outline: none; resize: none; font-family: Arial, sans-serif; font-size: 12px; padding: 4px; min-height: 40px; overflow: hidden; }
+.description-input { 
+  width: 100%; 
+  border: none; 
+  outline: none; 
+  resize: vertical; 
+  font-family: Arial, sans-serif; 
+  font-size: 12px; 
+  padding: 8px; 
+  min-height: 60px; 
+  overflow: auto; 
+  line-height: 1.4;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
 .quantity-input, .rate-input { width: 80px; border: none; outline: none; text-align: center; font-size: 12px; padding: 4px; font-weight: bold; }
 .currency { font-size: 10px; color: #666; margin-left: 2px; }
 .amount-cell, .vat-cell, .total-cell { text-align: right; white-space: nowrap; font-weight: bold; }
@@ -107,29 +113,77 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 
 /* Print Styles: force single A4 page */
 @media print {
-  body { background: #fff; }
-  .no-print, .navbar { display: none !important; }
-  .container { margin: 0; max-width: none; }
-  .invoice-container { box-shadow: none; padding: 0; }
-  .invoice-content { 
-    width: 210mm; 
-    max-height: 290mm;
-    padding: 8mm;
-    margin: 0 auto; 
-    border: none; 
-    position: relative;
-    transform-origin: top left;
-    font-size: 11px;
-    overflow: hidden;
+  body { background: #fff !important; }
+  
+  /* Hide all control elements */
+  .no-print, 
+  .navbar, 
+  .control-panel, 
+  .panel-section,
+  .table-controls,
+  button,
+  .btn,
+  .nav-buttons { 
+    display: none !important; 
+    visibility: hidden !important;
   }
-  html, body { height: 297mm; overflow: hidden; }
-  .items-table { font-size: 10px; }
-  .items-table th, .items-table td { padding: 6px; }
-  .description-input { font-size: 10px; }
+  
+  /* Only show the invoice content */
+  .container { margin: 0; max-width: none; padding: 0; }
+  .invoice-container { box-shadow: none; padding: 0; margin: 0; }
+  .invoice-content { 
+    width: 210mm !important; 
+    max-height: 290mm !important;
+    padding: 8mm !important;
+    margin: 0 auto !important; 
+    border: 2px solid #000 !important;
+    border-radius: 0 !important;
+    position: relative !important;
+    transform-origin: top left !important;
+    font-size: 11px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+  
+  /* Clean up the page */
+  html, body { 
+    height: 297mm !important; 
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Table optimizations for print */
+  .items-table { font-size: 10px !important; }
+  .items-table th, .items-table td { 
+    padding: 6px !important; 
+    border: 2px solid #000 !important;
+  }
+  .description-input { 
+    font-size: 10px !important;
+    border: none !important;
+    background: transparent !important;
+    resize: none !important;
+  }
+  
+  /* Form inputs for print */
+  .form-input {
+    border: none !important;
+    background: transparent !important;
+    border-bottom: 1px solid transparent !important;
+  }
+  
+  /* Layout adjustments */
   .company-header { padding-bottom: 12px; margin-bottom: 15px; }
   .invoice-header { margin-bottom: 15px; }
   .amount-words { font-size: 12px; }
   .company-footer { padding-top: 15px; }
+  
+  /* Remove any transforms or scaling for print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 /* Template Styles */
@@ -394,6 +448,53 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
       max-height: 70px; 
     }
   }
+}
+
+/* Mobile device class - added dynamically by JavaScript */
+.mobile-device .btn {
+  min-height: 44px !important;
+  font-size: 16px !important;
+  padding: 12px 16px !important;
+}
+
+.mobile-device .form-input {
+  font-size: 16px !important;
+  padding: 10px !important;
+}
+
+.mobile-device .items-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile scroll hint styling */
+.mobile-scroll-hint {
+  text-align: center; 
+  font-size: 11px; 
+  color: #666; 
+  margin-bottom: 10px; 
+  padding: 8px; 
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); 
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* Touch-friendly improvements */
+.mobile-device .saved-invoice-row {
+  padding: 15px 0 !important;
+  border-bottom: 2px solid #eee !important;
+}
+
+.mobile-device .modal-content {
+  padding: 20px !important;
+  border-radius: 12px !important;
 }
 
 /* Tablet responsive */
