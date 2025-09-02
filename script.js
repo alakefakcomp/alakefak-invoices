@@ -114,7 +114,10 @@
     els.amountInWords().textContent = numberToWordsAED(grand) + ' only';
   }
 
-  function fmt(n){ return (Math.round(n * 100) / 100).toFixed(2); }
+  function fmt(n){ 
+    const formatted = (Math.round(n * 100) / 100).toFixed(2);
+    return parseFloat(formatted).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
 
   // Convert numbers to words (simplified for AED)
   function numberToWordsAED(amount){

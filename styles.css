@@ -25,8 +25,8 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .company-info-arabic h2 { font-size: 15px; margin: 3px 0; color: #0d47a1; font-weight: bold; }
 .company-info-english h1 { font-size: 22px; margin: 3px 0; color: #0d47a1; text-align: right; font-weight: bold; }
 .logo-container { display: flex; justify-content: center; align-items: center; }
-.logo-circle { width: 120px; height: 120px; border: 3px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: #fff; }
-.logo-container img { max-width: 110px; max-height: 110px; }
+.logo-circle { width: 150px; height: 150px; border: 3px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: #fff; }
+.logo-container img { max-width: 140px; max-height: 140px; }
 
 .invoice-title { text-align: center; font-weight: bold; margin: 20px 0; }
 .invoice-title h2 { margin: 0; text-decoration: underline; font-size: 24px; }
@@ -38,14 +38,14 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .invoice-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .meta-field { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 4px 0; }
 .meta-field label { font-weight: bold; margin-right: 8px; font-size: 13px; }
-.form-input { width: 100%; border: none; border-bottom: 1px dashed #999; padding: 6px; outline: none; font-size: 13px; word-wrap: break-word; overflow-wrap: break-word; }
+.form-input { width: 100%; border: none; border-bottom: 1px dashed #999; padding: 6px; outline: none; font-size: 13px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; height: auto; min-height: 25px; }
 
 .items-section { margin-top: 15px; flex-grow: 1; }
 .items-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px; }
-.items-table th, .items-table td { border: 2px solid #000; padding: 8px; vertical-align: top; }
+.items-table th, .items-table td { border: 2px solid #000; padding: 10px; vertical-align: top; }
 .items-table th { background: #eaf2ff; font-weight: bold; text-align: center; }
-.item-input { width: 100%; border: 0; outline: none; padding: 6px; font-size: 13px; }
-.description-input { width: 100%; word-wrap: break-word; }
+.item-input { width: 100%; border: 0; outline: none; padding: 8px; font-size: 13px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; min-height: 20px; }
+.description-input { width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; height: auto; min-height: 40px; resize: vertical; }
 .quantity-input, .rate-input { text-align: right; font-weight: bold; }
 .amount-cell, .vat-cell, .total-cell { text-align: right; white-space: nowrap; font-weight: bold; }
 
@@ -58,12 +58,12 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #000; backgr
 .amount-words { color: #e53935; margin: 15px 0; font-weight: bold; text-decoration: underline; font-size: 15px; text-align: center; }
 
 .company-footer { margin-top: auto; padding-top: 25px; border-top: 2px solid #000; }
-.bank-info { display: grid; grid-template-columns: 160px 1fr 180px; gap: 20px; align-items: center; justify-content: center; margin-bottom: 15px; }
+.bank-info { display: grid; grid-template-columns: 180px 240px 180px; gap: 20px; align-items: center; justify-content: center; margin-bottom: 15px; }
 .stamp-container { text-align: center; }
-.stamp-container img { max-width: 140px; max-height: 140px; opacity: 0.9; }
-.bank-details { border: 3px solid #2f74c0; padding: 10px 12px; color: #2f74c0; font-weight: bold; font-size: 13px; text-align: center; }
-.bank-name { font-size: 14px; margin-bottom: 5px; }
-.bank-details-text div { margin-bottom: 2px; font-size: 12px; }
+.stamp-container img { max-width: 160px; max-height: 160px; opacity: 0.9; }
+.bank-details { border: 2px solid #2f74c0; padding: 6px 8px; color: #2f74c0; font-weight: bold; font-size: 11px; text-align: center; }
+.bank-name { font-size: 12px; margin-bottom: 3px; }
+.bank-details-text div { margin-bottom: 1px; font-size: 10px; }
 .signature-container { text-align: center; }
 .signature-container img { max-height: 90px; max-width: 170px; }
 
