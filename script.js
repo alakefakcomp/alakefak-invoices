@@ -431,7 +431,33 @@
   }
 
   function showAsset(imgEl, dataUrl){ imgEl.src = dataUrl; imgEl.style.display = 'block'; }
+  
+  // Template switching functionality
+  function changeTemplate() {
+    const template = document.getElementById('templateSelect').value;
+    const content = els.content();
+    
+    // Remove existing template classes
+    content.className = content.className.replace(/template-\w+/g, '');
+    
+    // Apply new template
+    content.classList.add(`template-${template}`);
+    
+    // Store preference
+    localStorage.setItem('selected_template', template);
+  }
+  window.changeTemplate = changeTemplate;
+  
+  // Load saved template preference
+  function loadTemplatePreference() {
+    const savedTemplate = localStorage.getItem('selected_template') || 'modern';
+    document.getElementById('templateSelect').value = savedTemplate;
+    changeTemplate();
+  }
 
   // Initialize when DOM loaded
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    loadTemplatePreference();
+  });
 })();
