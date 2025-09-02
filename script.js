@@ -51,8 +51,29 @@
     els.itemsBody().addEventListener('input', handleInputChange);
     els.itemsBody().addEventListener('change', recalc);
     
+    // Add auto-expanding textareas
+    setupAutoExpanding();
+    
     // Initial calc
     recalc();
+  }
+  
+  function setupAutoExpanding() {
+    // Auto-expand textareas
+    function autoExpand(element) {
+      element.style.height = 'auto';
+      element.style.height = (element.scrollHeight) + 'px';
+    }
+    
+    // Handle both existing and new textareas
+    document.addEventListener('input', function(e) {
+      if (e.target.matches('.description-input') || e.target.matches('#billTo')) {
+        autoExpand(e.target);
+      }
+    });
+    
+    // Initial setup for existing textareas
+    document.querySelectorAll('.description-input, #billTo').forEach(autoExpand);
   }
 
   function pad(n, width=4) { return String(n).padStart(width, '0'); }
@@ -135,18 +156,17 @@
   function recalc(){
     let subtotal = 0;
     let totalVat = 0;
-    let grandTotal = 0;
     
     const rows = els.itemsBody().querySelectorAll('.item-row');
     rows.forEach(row => {
       const amount = parseFloat(row.querySelector('.amount-value')?.textContent || '0');
       const vat = parseFloat(row.querySelector('.vat-value')?.textContent || '0');
-      const total = parseFloat(row.querySelector('.total-value')?.textContent || '0');
       
       subtotal += amount;
       totalVat += vat;
-      grandTotal += total;
     });
+    
+    const grandTotal = subtotal + totalVat;
     
     els.subtotal().textContent = fmt(subtotal) + ' AED';
     els.totalVat().textContent = fmt(totalVat) + ' AED';
