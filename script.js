@@ -170,15 +170,25 @@
     
     const rows = els.itemsBody().querySelectorAll('.item-row');
     rows.forEach(row => {
-      // Parse formatted numbers by removing commas first
-      const amountText = row.querySelector('.amount-value')?.textContent || '0';
-      const vatText = row.querySelector('.vat-value')?.textContent || '0';
+      // Get raw values from inputs instead of formatted text
+      const quantityInput = row.querySelector('.quantity-input');
+      const rateInput = row.querySelector('.rate-input');
       
-      const amount = parseFloat(amountText.replace(/,/g, '')) || 0;
-      const vat = parseFloat(vatText.replace(/,/g, '')) || 0;
-      
-      subtotal += amount;
-      totalVat += vat;
+      if (quantityInput && rateInput) {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+        
+        const amount = quantity * rate;
+        const vat = amount * VAT_RATE;
+        
+        subtotal += amount;
+        totalVat += vat;
+        
+        // Update the display values to match
+        row.querySelector('.amount-value').textContent = fmt(amount);
+        row.querySelector('.vat-value').textContent = fmt(vat);
+        row.querySelector('.total-value').textContent = fmt(amount + vat);
+      }
     });
     
     const grandTotal = subtotal + totalVat;
