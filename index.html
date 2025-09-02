@@ -108,7 +108,7 @@
                                     <input type="number" class="quantity-input" value="1" min="1">
                                 </td>
                                 <td>
-                                    <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0">
+                                    <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0" max="100000">
                                     <span class="currency">AED</span>
                                 </td>
                                 <td class="amount-cell">
@@ -163,12 +163,7 @@
                         </div>
                         
                         <div class="bank-details">
-                            <div class="bank-info-box">
-                                <div><strong>ALA KAIFAK FURNITURE MOVERS</strong></div>
-                                <div><strong>BANK: FIRST ABU DHABI BANK</strong></div>
-                                <div><strong>IBAN: AE530351411323477485017</strong></div>
-                                <div><strong>A/C NO: 1411323477485017</strong></div>
-                            </div>
+                            <!-- Bank details removed as requested -->
                         </div>
                     </div>
                     
@@ -200,6 +195,11 @@
                     <option value="classic">Classic Traditional</option>
                     <option value="minimal">Minimal Clean</option>
                     <option value="elegant">Elegant Formal</option>
+                    <option value="corporate">Corporate Blue</option>
+                    <option value="luxury">Luxury Gold</option>
+                    <option value="tech">Tech Modern</option>
+                    <option value="vintage">Vintage Style</option>
+                    <option value="colorful">Colorful Creative</option>
                 </select>
             </div>
             
@@ -208,10 +208,20 @@
                 <div class="upload-group">
                     <label for="logoUpload">Company Logo:</label>
                     <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)">
+                    <div class="size-control">
+                        <label for="logoSize">Logo Size:</label>
+                        <input type="range" id="logoSize" min="50" max="300" value="140" onchange="adjustLogoSize(this.value)">
+                        <span id="logoSizeValue">140px</span>
+                    </div>
                 </div>
                 <div class="upload-group">
                     <label for="stampUpload">Company Stamp:</label>
                     <input type="file" id="stampUpload" accept="image/*" onchange="handleStampUpload(event)">
+                    <div class="size-control">
+                        <label for="stampSize">Stamp Size:</label>
+                        <input type="range" id="stampSize" min="100" max="400" value="200" onchange="adjustStampSize(this.value)">
+                        <span id="stampSizeValue">200px</span>
+                    </div>
                 </div>
                 <div class="upload-group">
                     <label for="signatureUpload">Signature:</label>

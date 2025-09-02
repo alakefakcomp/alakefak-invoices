@@ -101,7 +101,7 @@
         <input type="number" class="quantity-input" value="1" min="1">
       </td>
       <td>
-        <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0">
+        <input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0" max="100000">
         <span class="currency">AED</span>
       </td>
       <td class="amount-cell">
@@ -179,23 +179,36 @@
     return parseFloat(formatted).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   }
 
-  // Convert numbers to words (simplified for AED)
+  // Convert numbers to words (enhanced for large numbers up to 100,000 AED)
   function numberToWordsAED(amount){
     const ones = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
     const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
 
     function toWords(n){
+      if (n === 0) return 'Zero';
       if (n < 20) return ones[n];
       if (n < 100) return tens[Math.floor(n/10)] + (n%10? ' ' + ones[n%10] : '');
       if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred' + (n%100? ' ' + toWords(n%100) : '');
-      if (n < 1000000) return toWords(Math.floor(n/1000)) + ' Thousand' + (n%1000? ' ' + toWords(n%1000) : '');
-      return n.toString();
+      if (n < 1000000) {
+        const thousands = Math.floor(n/1000);
+        const remainder = n%1000;
+        return toWords(thousands) + ' Thousand' + (remainder? ' ' + toWords(remainder) : '');
+      }
+      return n.toLocaleString(); // For very large numbers, return formatted number
     }
 
+    if (amount === 0) return 'Zero AED';
+    
     const whole = Math.floor(amount);
     const fils = Math.round((amount - whole) * 100);
     const currency = 'AED';
-    return `${toWords(whole)} ${currency}` + (fils? ` and ${toWords(fils)} Fils` : '');
+    let result = `${toWords(whole)} ${currency}`;
+    
+    if (fils > 0) {
+      result += ` and ${toWords(fils)} Fils`;
+    }
+    
+    return result;
   }
 
   async function generatePDF(){
@@ -494,6 +507,27 @@
   }
 
   function showAsset(imgEl, dataUrl){ imgEl.src = dataUrl; imgEl.style.display = 'block'; }
+  
+  // Size adjustment functions
+  function adjustLogoSize(size) {
+    const logo = els.logo();
+    if (logo.src) {
+      logo.style.maxWidth = size + 'px';
+      logo.style.maxHeight = size + 'px';
+    }
+    document.getElementById('logoSizeValue').textContent = size + 'px';
+  }
+  window.adjustLogoSize = adjustLogoSize;
+  
+  function adjustStampSize(size) {
+    const stamp = els.stamp();
+    if (stamp.src) {
+      stamp.style.maxWidth = size + 'px';
+      stamp.style.maxHeight = size + 'px';
+    }
+    document.getElementById('stampSizeValue').textContent = size + 'px';
+  }
+  window.adjustStampSize = adjustStampSize;
   
   // Template switching functionality
   function changeTemplate() {
