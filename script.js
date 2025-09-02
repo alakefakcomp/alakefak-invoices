@@ -47,9 +47,10 @@
       els.invoiceNumber().value = nextInvoiceNumber();
     }
 
-    // Attach listeners
-    els.itemsBody().addEventListener('input', recalc);
-
+    // Attach listeners for real-time calculation
+    els.itemsBody().addEventListener('input', handleInputChange);
+    els.itemsBody().addEventListener('change', recalc);
+    
     // Initial calc
     recalc();
   }
@@ -91,6 +92,13 @@
   }
   window.removeItem = removeItem;
 
+  function handleInputChange(e) {
+    // Trigger recalc immediately when quantity or rate inputs change
+    if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
+      recalc();
+    }
+  }
+  
   function recalc(){
     let subtotal = 0;
     let totalVat = 0;
