@@ -134,70 +134,60 @@
   window.removeItem = removeItem;
 
   function handleInputChange(e) {
-    // Trigger recalc immediately when quantity or rate inputs change
     if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
-      const row = e.target.closest('tr');
-      calculateItemTotal(row);
-      recalc();
+      setTimeout(recalcAll, 0); // Force async to ensure DOM is updated
     }
   }
   
-  // Also recalculate on blur to ensure we catch all changes
   function handleInputBlur(e) {
     if (e.target.classList.contains('quantity-input') || e.target.classList.contains('rate-input')) {
-      const row = e.target.closest('tr');
-      calculateItemTotal(row);
-      recalc();
+      setTimeout(recalcAll, 0);
     }
   }
   
-  function calculateItemTotal(row) {
-    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+  function recalcAll() {
+    let grandSubtotal = 0;
+    let grandTotalVat = 0;
     
-    const amount = quantity * rate;
-    const vat = amount * VAT_RATE; // 5% VAT
-    const total = amount + vat;
-    
-    row.querySelector('.amount-value').textContent = fmt(amount);
-    row.querySelector('.vat-value').textContent = fmt(vat);
-    row.querySelector('.total-value').textContent = fmt(total);
-  }
-  
-  function recalc(){
-    let subtotal = 0;
-    let totalVat = 0;
-    
+    // Process each row
     const rows = els.itemsBody().querySelectorAll('.item-row');
     rows.forEach(row => {
-      // Get raw values from inputs instead of formatted text
-      const quantityInput = row.querySelector('.quantity-input');
+      const qtyInput = row.querySelector('.quantity-input');
       const rateInput = row.querySelector('.rate-input');
       
-      if (quantityInput && rateInput) {
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const rate = parseFloat(rateInput.value) || 0;
-        
-        const amount = quantity * rate;
-        const vat = amount * VAT_RATE;
-        
-        subtotal += amount;
-        totalVat += vat;
-        
-        // Update the display values to match
-        row.querySelector('.amount-value').textContent = fmt(amount);
-        row.querySelector('.vat-value').textContent = fmt(vat);
-        row.querySelector('.total-value').textContent = fmt(amount + vat);
-      }
+      const qty = parseFloat(qtyInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      
+      const rowAmount = qty * rate;
+      const rowVat = rowAmount * 0.05; // 5% VAT
+      const rowTotal = rowAmount + rowVat;
+      
+      // Update row displays
+      row.querySelector('.amount-value').textContent = formatMoney(rowAmount);
+      row.querySelector('.vat-value').textContent = formatMoney(rowVat);
+      row.querySelector('.total-value').textContent = formatMoney(rowTotal);
+      
+      // Add to grand totals
+      grandSubtotal += rowAmount;
+      grandTotalVat += rowVat;
     });
     
-    const grandTotal = subtotal + totalVat;
+    const grandTotal = grandSubtotal + grandTotalVat;
     
-    els.subtotal().textContent = fmt(subtotal) + ' AED';
-    els.totalVat().textContent = fmt(totalVat) + ' AED';
-    els.grandTotal().textContent = fmt(grandTotal) + ' AED';
+    // Update footer totals
+    els.subtotal().textContent = formatMoney(grandSubtotal) + ' AED';
+    els.totalVat().textContent = formatMoney(grandTotalVat) + ' AED';
+    els.grandTotal().textContent = formatMoney(grandTotal) + ' AED';
     els.amountInWords().textContent = numberToWordsAED(grandTotal) + ' only';
   }
+  
+  function formatMoney(n) {
+    return n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  
+  // Legacy functions for compatibility
+  function calculateItemTotal(row) { recalcAll(); }
+  function recalc() { recalcAll(); }
 
   function fmt(n){ 
     if (isNaN(n) || n === null || n === undefined) return '0.00';
