@@ -651,10 +651,15 @@
   }
   
   // Initialize when DOM loaded
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     init();
     loadTemplatePreference();
     initEmailJS();
+    
+    // FORCE immediate cloud sync on every page load
+    console.log('🔄 Force syncing from cloud on startup...');
+    await syncFromCloud();
+    await syncCounterFromCloud();
     
     // Auto-update email fields when invoice data changes
     els.invoiceNumber().addEventListener('input', updateEmailFields);
