@@ -653,8 +653,16 @@
         from_email: 'alakefakcomp@gmail.com'
       };
       
-      // Send email using EmailJS
-      const response = await emailjs.send('service_j8x7qcr', 'template_invoice', emailData);
+      // Send email using EmailJS - use a simpler service
+      const response = await emailjs.send('default_service', 'template_qwertyui', {
+        to_name: emailData.customer_name,
+        to_email: emailData.to_email,
+        from_name: emailData.from_name,
+        message: emailData.message,
+        subject: emailData.subject,
+        invoice_number: emailData.invoice_number,
+        reply_to: 'alakefakcomp@gmail.com'
+      });
       
       // Success
       sendButton.innerHTML = '✅ Email Sent!';
