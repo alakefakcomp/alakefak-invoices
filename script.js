@@ -903,15 +903,46 @@
     function adjustForPrint() {
         const itemCount = elements.itemsTable ? elements.itemsTable.children.length : 0;
         const invoiceDoc = document.getElementById('invoice-document');
+        const invoiceTable = document.getElementById('items-table');
         
-        if (!invoiceDoc) return;
+        if (!invoiceDoc || !invoiceTable) return;
         
-        // Scale document based on content to ensure single page
+        // Adjust table styling based on item count
+        if (itemCount >= 4) {
+            invoiceTable.style.fontSize = '11px';
+            
+            // Reduce padding for table cells when there are many items
+            const cells = invoiceTable.querySelectorAll('th, td');
+            cells.forEach(cell => {
+                if (itemCount >= 4 && itemCount < 8) {
+                    cell.style.padding = '0.4rem 0.3rem';
+                } else if (itemCount >= 8) {
+                    cell.style.padding = '0.3rem 0.2rem';
+                }
+            });
+            
+            // Reduce row height for description inputs
+            const descInputs = invoiceTable.querySelectorAll('.description-input');
+            descInputs.forEach(input => {
+                if (itemCount >= 4) {
+                    input.style.minHeight = '1.5rem';
+                    input.style.maxHeight = '3rem';
+                }
+            });
+        } else {
+            // Reset to default styling
+            invoiceTable.style.fontSize = '13px';
+            const cells = invoiceTable.querySelectorAll('th, td');
+            cells.forEach(cell => {
+                cell.style.padding = '';
+            });
+        }
+        
+        // Scale entire document if necessary
         let scale = 1;
-        if (itemCount > 8) scale = 0.95;
-        if (itemCount > 12) scale = 0.9;
-        if (itemCount > 16) scale = 0.85;
-        if (itemCount > 20) scale = 0.8;
+        if (itemCount > 10) scale = 0.95;
+        if (itemCount > 15) scale = 0.9;
+        if (itemCount > 20) scale = 0.85;
         
         invoiceDoc.style.transformOrigin = 'top left';
         invoiceDoc.style.transform = `scale(${scale})`;
