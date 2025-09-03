@@ -144,7 +144,16 @@
 
     const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    // Fix library access
+    let pdf;
+    if (window.jspdf && window.jspdf.jsPDF) {
+      pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+    } else if (window.jsPDF) {
+      pdf = new window.jsPDF('p', 'mm', 'a4');
+    } else {
+      alert('PDF library not loaded properly. Please refresh the page.');
+      return;
+    }
     const pageWidth = 210; const pageHeight = 297;
 
     // Calculate scale to fit one page
