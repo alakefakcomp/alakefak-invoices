@@ -3,451 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alakaifak Mover - Professional Invoice Management System</title>
+    <title>Alakaifak Mover - Professional Invoice System</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Top Header -->
-        <header class="app-header">
-            <div class="company-branding">
-                <div class="logo-section">
-                    <div class="company-logo-circle">
-                        <span class="logo-text">ALA<br>KAIFAK</span>
-                    </div>
-                    <div class="company-name">
-                        <h1>Ala Kaifak Furniture Movers</h1>
-                        <p class="arabic-subtitle">مؤسسة علي كيفك لنقل الاثاث</p>
-                    </div>
-                </div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>🚛 Alakaifak Mover</h1>
+                <span class="nav-subtitle">Professional Moving Services Invoice System</span>
+            </div>
+            <div class="nav-buttons">
+                <button onclick="newInvoice()" class="btn btn-primary">📄 New Invoice</button>
+                <button onclick="showSavedInvoices()" class="btn btn-secondary">📋 Saved Invoices</button>
+                <button onclick="showCustomerManager()" class="btn btn-success">👥 Customers</button>
+                <button onclick="showTemplateSelector()" class="btn btn-info">🎨 Templates</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Template Selector -->
+    <div id="templateSelector" class="template-panel" style="display: none;">
+        <div class="template-header">
+            <h3>🎨 Choose Template Style</h3>
+            <button onclick="hideTemplateSelector()" class="btn btn-sm">✕</button>
+        </div>
+        <div class="template-options">
+            <div class="template-option" data-template="classic" onclick="selectTemplate('classic')">
+                <div class="template-preview classic-preview"></div>
+                <span>Classic Blue</span>
+            </div>
+            <div class="template-option" data-template="modern" onclick="selectTemplate('modern')">
+                <div class="template-preview modern-preview"></div>
+                <span>Modern Green</span>
+            </div>
+            <div class="template-option" data-template="elegant" onclick="selectTemplate('elegant')">
+                <div class="template-preview elegant-preview"></div>
+                <span>Elegant Purple</span>
+            </div>
+            <div class="template-option" data-template="professional" onclick="selectTemplate('professional')">
+                <div class="template-preview professional-preview"></div>
+                <span>Professional Gray</span>
+            </div>
+            <div class="template-option" data-template="minimalist" onclick="selectTemplate('minimalist')">
+                <div class="template-preview minimalist-preview"></div>
+                <span>Minimalist Black</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Management -->
+    <div id="customerManager" class="customer-manager" style="display: none;">
+        <div class="customer-header">
+            <h2>👥 Customer Management</h2>
+            <div class="customer-actions">
+                <button onclick="hideCustomerManager()" class="btn btn-secondary">← Back</button>
+                <button onclick="showAddCustomer()" class="btn btn-primary">➕ Add Customer</button>
                 <div class="sync-status">
-                    <span id="sync-indicator" class="sync-online">🟢 Online</span>
+                    <span class="sync-indicator online">☁️ Cloud Synced</span>
                 </div>
             </div>
-
-        <!-- Navigation Tabs -->
-        <nav class="main-navigation">
-            <button class="nav-tab active" data-section="invoice-section">
-                <span class="nav-icon">📄</span>
-                <span>New Invoice</span>
-            </button>
-            <button class="nav-tab" data-section="customers-section">
-                <span class="nav-icon">👥</span>
-                <span>Customers</span>
-            </button>
-            <button class="nav-tab" data-section="saved-section">
-                <span class="nav-icon">💾</span>
-                <span>Saved Invoices</span>
-            </button>
-            <button class="nav-tab" data-section="templates-section">
-                <span class="nav-icon">📋</span>
-                <span>Templates</span>
-            </button>
-            <button class="nav-tab" data-section="settings-section">
-                <span class="nav-icon">⚙️</span>
-                <span>Settings</span>
-            </button>
-        </nav>
-        </header>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Invoice Creation Section -->
-            <section id="invoice-section" class="content-section active">
-                <div class="invoice-workspace">
-                    <!-- Invoice Controls -->
-                    <div class="invoice-controls">
-                        <div class="controls-left">
-                            <div class="control-group">
-                                <label>Customer:</label>
-                                <select id="customer-select" class="customer-dropdown">
-                                    <option value="">Select Existing Customer</option>
-                                </select>
-                                <button id="quick-add-customer" class="quick-btn">+ New</button>
-                            </div>
-                            <div class="control-group">
-                                <label>Template:</label>
-                                <select id="template-select" class="template-dropdown">
-                                    <option value="standard">Standard Layout</option>
-                                    <option value="detailed">Detailed Layout</option>
-                                    <option value="compact">Compact Layout</option>
-                                    <option value="bilingual">Arabic/English</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="controls-right">
-                            <button id="save-invoice" class="action-btn save-btn">
-                                <span>💾</span> Save
-                            </button>
-                            <button id="print-invoice" class="action-btn print-btn">
-                                <span>🖨️</span> Print
-                            </button>
-                            <button id="export-pdf" class="action-btn pdf-btn">
-                                <span>📄</span> PDF
-                            </button>
-                            <button id="clear-form" class="action-btn clear-btn">
-                                <span>🗑️</span> Clear
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Invoice Preview -->
-                    <div class="invoice-preview-container">
-                        <div id="invoice-document" class="invoice-document">
-                            <!-- Company Header -->
-                            <div class="document-header">
-                                <div class="header-left">
-                                    <div class="arabic-header">
-                                        <h2>مؤسسة علي كيفك لنقل الاثاث</h2>
-                                    </div>
-                                </div>
-                                <div class="header-center">
-                                    <div class="company-logo-container" id="logo-container">
-                                        <div class="default-logo">
-                                            <div class="logo-circle">
-                                                <span class="logo-initials">ALA<br>KAIFAK</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="header-right">
-                                    <div class="english-header">
-                                        <h2>Ala Kaifak Furniture Movers</h2>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Invoice Title -->
-                            <div class="invoice-title-section">
-                                <h3>TAX INVOICE</h3>
-                            </div>
-
-                            <!-- Invoice Details -->
-                            <div class="invoice-details-grid">
-                                <div class="customer-details">
-                                    <div class="detail-group">
-                                        <label>Bill to:</label>
-                                        <textarea id="customer-info" rows="4" placeholder="Customer Name&#10;Address Line 1&#10;Address Line 2&#10;City, Country"></textarea>
-                                    </div>
-                                    <div class="detail-group">
-                                        <label>TRN #:</label>
-                                        <input type="text" id="customer-trn" placeholder="Tax Registration Number">
-                                    </div>
-                                </div>
-                                <div class="invoice-meta">
-                                    <div class="meta-row">
-                                        <label>Date:</label>
-                                        <input type="date" id="invoice-date" class="auto-field">
-                                        <button id="edit-date" class="edit-btn">✏️</button>
-                                    </div>
-                                    <div class="meta-row">
-                                        <label>INVOICE NO:</label>
-                                        <input type="text" id="invoice-number" class="auto-field" readonly>
-                                        <button id="edit-number" class="edit-btn">✏️</button>
-                                    </div>
-                                    <div class="meta-row">
-                                        <label>ADDRESS:</label>
-                                        <span>ABUDHABI</span>
-                                    </div>
-                                    <div class="meta-row">
-                                        <label>BOX:</label>
-                                        <span>130483</span>
-                                    </div>
-                                    <div class="meta-row">
-                                        <label>OUR TRN:</label>
-                                        <span>100234725800003</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Items Table -->
-                            <div class="items-table-container">
-                                <table class="invoice-table" id="items-table">
-                                    <thead>
-                                        <tr>
-                                            <th width="8%">S/N</th>
-                                            <th width="35%">DESCRIPTION</th>
-                                            <th width="8%">Qty</th>
-                                            <th width="12%">UNIT PRICE</th>
-                                            <th width="12%">TOTAL PRICE</th>
-                                            <th width="10%">VAT 5%</th>
-                                            <th width="12%">TOTAL WITH VAT</th>
-                                            <th width="3%" class="no-print"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="items-tbody">
-                                        <!-- Dynamic items will be added here -->
-                                    </tbody>
-                                </table>
-                                <div class="add-item-section no-print">
-                                    <button id="add-item-btn" class="add-item-button">
-                                        <span>+</span> Add Item
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Totals Summary -->
-                            <div class="invoice-totals">
-                                <div class="totals-grid">
-                                    <div class="total-row">
-                                        <span class="total-label">TOTAL PRICE:</span>
-                                        <span class="total-amount" id="subtotal-amount">500AED</span>
-                                        <span class="total-vat" id="subtotal-vat">25AED</span>
-                                        <span class="total-with-vat" id="subtotal-total">525AED</span>
-                                    </div>
-                                </div>
-                                <div class="grand-total">
-                                    <span class="grand-total-label">Total price (</span>
-                                    <span id="total-in-words">FIVE HUNDRED TWENTY FIVE DHS</span>
-                                    <span class="grand-total-label">)</span>
-                                </div>
-                            </div>
-
-                            <!-- Payment and Signature -->
-                            <div class="invoice-footer">
-                                <div class="payment-section">
-                                    <p><strong>Please do the needful for payment</strong></p>
-                                    <br>
-                                    <p><strong>Regards</strong></p>
-                                </div>
-
-                                <div class="signature-section">
-                                    <div class="company-signature">
-                                        <p><strong>ALA KAIFAK FURNITURE MOVERS</strong></p>
-                                        <div class="stamp-area" id="company-stamp-area">
-                                            <!-- Company stamp will be inserted here -->
-                                        </div>
-                                        <div class="signature-line"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Contact Information -->
-                            <div class="contact-footer">
-                                <p class="email-line">E-mail: alakefakcomp@gmail.com</p>
-                                <p class="contact-line">Tel.: +971 2 5529191, Fax: +971 2 5529195, Mob.: +971 50 8199942, P.O.Box: 130483, Abu Dhabi - U.A.E.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Customers Management Section -->
-            <section id="customers-section" class="content-section">
-                <div class="section-header">
-                    <h2>Customer Management</h2>
-                    <button id="add-new-customer" class="primary-btn">
-                        <span>+</span> Add New Customer
-                    </button>
-                </div>
-                <div class="customers-grid" id="customers-grid">
-                    <!-- Customer cards will be dynamically generated -->
-                </div>
-            </section>
-
-            <!-- Saved Invoices Section -->
-            <section id="saved-section" class="content-section">
-                <div class="section-header">
-                    <h2>Saved Invoices</h2>
-                    <div class="search-controls">
-                        <input type="text" id="invoice-search" placeholder="Search invoices...">
-                        <select id="customer-filter">
-                            <option value="">All Customers</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="invoices-grid" id="invoices-grid">
-                    <!-- Invoice cards will be dynamically generated -->
-                </div>
-            </section>
-
-            <!-- Templates Section -->
-            <section id="templates-section" class="content-section">
-                <div class="section-header">
-                    <h2>Invoice Templates</h2>
-                    <p>Choose from multiple professional layouts</p>
-                </div>
-                <div class="templates-grid">
-                    <div class="template-card active" data-template="standard">
-                        <div class="template-preview">
-                            <div class="preview-header">Standard Layout</div>
-                            <div class="preview-lines">
-                                <div class="line"></div>
-                                <div class="line short"></div>
-                                <div class="line"></div>
-                            </div>
-                        </div>
-                        <h3>Standard Layout</h3>
-                        <p>Clean and professional design</p>
-                    </div>
-                    <div class="template-card" data-template="detailed">
-                        <div class="template-preview">
-                            <div class="preview-header">Detailed Layout</div>
-                            <div class="preview-lines">
-                                <div class="line"></div>
-                                <div class="line"></div>
-                                <div class="line short"></div>
-                                <div class="line"></div>
-                            </div>
-                        </div>
-                        <h3>Detailed Layout</h3>
-                        <p>Comprehensive information display</p>
-                    </div>
-                    <div class="template-card" data-template="compact">
-                        <div class="template-preview">
-                            <div class="preview-header">Compact Layout</div>
-                            <div class="preview-lines">
-                                <div class="line"></div>
-                                <div class="line short"></div>
-                            </div>
-                        </div>
-                        <h3>Compact Layout</h3>
-                        <p>Space-efficient design</p>
-                    </div>
-                    <div class="template-card" data-template="bilingual">
-                        <div class="template-preview">
-                            <div class="preview-header arabic">نموذج مزدوج</div>
-                            <div class="preview-lines">
-                                <div class="line"></div>
-                                <div class="line short"></div>
-                                <div class="line"></div>
-                            </div>
-                        </div>
-                        <h3>Bilingual Layout</h3>
-                        <p>Arabic and English support</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Settings Section -->
-            <section id="settings-section" class="content-section">
-                <div class="section-header">
-                    <h2>Settings</h2>
-                    <p>Customize your invoice system</p>
-                </div>
-                <div class="settings-grid">
-                    <div class="settings-card">
-                        <h3>Company Information</h3>
-                        <div class="setting-item">
-                            <label>Company Logo:</label>
-                            <div class="file-upload">
-                                <input type="file" id="logo-upload" accept="image/*" hidden>
-                                <button class="upload-btn" onclick="document.getElementById('logo-upload').click()">
-                                    📁 Upload Logo
-                                </button>
-                                <div id="logo-preview" class="image-preview"></div>
-                            </div>
-                        </div>
-                        <div class="setting-item">
-                            <label>Company Stamp:</label>
-                            <div class="file-upload">
-                                <input type="file" id="stamp-upload" accept="image/*" hidden>
-                                <button class="upload-btn" onclick="document.getElementById('stamp-upload').click()">
-                                    📁 Upload Stamp
-                                </button>
-                                <button id="toggle-stamp" class="toggle-btn">Show/Hide Stamp</button>
-                                <div id="stamp-preview" class="image-preview"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-card">
-                        <h3>Invoice Settings</h3>
-                        <div class="setting-item">
-                            <label>Starting Invoice Number:</label>
-                            <input type="number" id="starting-invoice-num" value="1334">
-                        </div>
-                        <div class="setting-item">
-                            <label>VAT Rate (%):</label>
-                            <input type="number" id="vat-rate" value="5" step="0.1">
-                        </div>
-                        <div class="setting-item">
-                            <label>Currency:</label>
-                            <select id="currency-setting">
-                                <option value="AED">AED - United Arab Emirates Dirham</option>
-                                <option value="USD">USD - US Dollar</option>
-                                <option value="EUR">EUR - Euro</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-card">
-                        <h3>Data Management</h3>
-                        <div class="setting-item">
-                            <button id="backup-data" class="action-btn">
-                                📤 Export All Data
-                            </button>
-                        </div>
-                        <div class="setting-item">
-                            <input type="file" id="restore-data" accept=".json" hidden>
-                            <button class="action-btn" onclick="document.getElementById('restore-data').click()">
-                                📥 Import Data
-                            </button>
-                        </div>
-                        <div class="setting-item">
-                            <button id="clear-all-data" class="danger-btn">
-                                🗑️ Clear All Data
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Customer Modal -->
-        <div id="customer-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Customer Information</h2>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <form id="customer-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Customer Name *</label>
-                            <input type="text" id="customer-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>TRN Number</label>
-                            <input type="text" id="customer-trn-input">
-                        </div>
+        </div>
+        
+        <div class="customer-search">
+            <input type="text" id="customerSearch" placeholder="🔍 Search customers by name, phone, or email..." onkeyup="filterCustomers()">
+            <div class="customer-count">Total: <span id="customerCount">0</span> customers</div>
+        </div>
+        
+        <div id="customerList" class="customer-grid"></div>
+        
+        <!-- Add/Edit Customer Form -->
+        <div id="customerForm" class="customer-form" style="display: none;">
+            <div class="form-card">
+                <h3 id="customerFormTitle">Add New Customer</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Customer Name *</label>
+                        <input type="text" id="customerName" placeholder="Full customer name" required>
                     </div>
                     <div class="form-group">
-                        <label>Address *</label>
-                        <textarea id="customer-address-input" rows="3" required></textarea>
+                        <label>TRN Number</label>
+                        <input type="text" id="customerTRN" placeholder="Tax Registration Number">
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Phone</label>
-                            <input type="tel" id="customer-phone">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="customer-email">
-                        </div>
+                    <div class="form-group full-width">
+                        <label>Address</label>
+                        <textarea id="customerAddress" placeholder="Complete address with area, city, country" rows="3"></textarea>
                     </div>
-                    <div class="form-actions">
-                        <button type="button" class="cancel-btn">Cancel</button>
-                        <button type="submit" class="save-btn">Save Customer</button>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="customerPhone" placeholder="+971 XX XXX XXXX">
                     </div>
-                </form>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="customerEmail" placeholder="customer@email.com">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button onclick="saveCustomer()" class="btn btn-success">💾 Save Customer</button>
+                    <button onclick="hideAddCustomer()" class="btn btn-secondary">❌ Cancel</button>
+                    <button onclick="clearCustomerForm()" class="btn btn-warning">🗑️ Clear</button>
+                </div>
             </div>
         </div>
-
-        <!-- Loading Overlay -->
-        <div id="loading-overlay" class="loading-overlay">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <p>Processing...</p>
-            </div>
-        </div>
-
-        <!-- Toast Notifications -->
-        <div id="toast-container" class="toast-container"></div>
     </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div class="control-section">
+                <h3>Customer Selection</h3>
+                <div class="control-group">
+                    <select id="customerSelector" onchange="selectCustomer()">
+                        <option value="">Select existing customer...</option>
+                    </select>
+                    <button onclick="clearCustomerData()" class="btn btn-sm">Clear</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Company Assets</h3>
+                <div class="asset-controls">
+                    <div class="asset-group">
+                        <label>Company Logo:</label>
+                        <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)" style="display: none;">
+                        <button onclick="document.getElementById('logoUpload').click()" class="btn btn-sm">📷 Upload Logo</button>
+                        <button onclick="removeAsset('logo')" class="btn btn-sm btn-danger">Remove</button>
+                        <div class="size-control">
+                            <label>Size: <span id="logoSizeValue">80px</span></label>
+                            <input type="range" id="logoSize" min="40" max="150" value="80" onchange="adjustLogoSize(this.value)">
+                        </div>
+                    </div>
+                    <div class="asset-group">
+                        <label>Company Stamp:</label>
+                        <input type="file" id="stampUpload" accept="image/*" onchange="handleStampUpload(event)" style="display: none;">
+                        <button onclick="document.getElementById('stampUpload').click()" class="btn btn-sm">📋 Upload Stamp</button>
+                        <button onclick="removeAsset('stamp')" class="btn btn-sm btn-danger">Remove</button>
+                        <div class="size-control">
+                            <label>Size: <span id="stampSizeValue">60px</span></label>
+                            <input type="range" id="stampSize" min="30" max="120" value="60" onchange="adjustStampSize(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="action-buttons">
+                    <button onclick="saveInvoice()" class="btn btn-success">💾 Save Invoice</button>
+                    <button onclick="generatePDF()" class="btn btn-primary">📄 Download PDF</button>
+                    <button onclick="printInvoice()" class="btn btn-info">🖨️ Print</button>
+                    <button onclick="emailInvoice()" class="btn btn-warning">📧 Email</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Content -->
+        <div id="invoiceContent" class="invoice-container template-classic">
+            <!-- Company Header -->
+            <div class="company-header">
+                <div class="company-left">
+                    <div class="company-name-english">Alakefak Furniture Movers</div>
+                </div>
+                <div class="company-center">
+                    <img id="companyLogo" class="company-logo" style="display: none;">
+                </div>
+                <div class="company-right">
+                    <div class="company-name-arabic">مؤسسة على كيفك لنقل الأثاث</div>
+                </div>
+            </div>
+
+            <!-- Invoice Title -->
+            <div class="invoice-title">
+                <h1>TAX INVOICE</h1>
+            </div>
+
+            <!-- Invoice Details -->
+            <div class="invoice-details">
+                <div class="invoice-left">
+                    <div class="field-group">
+                        <label>Bill To:</label>
+                        <textarea id="billTo" class="auto-expand" placeholder="Customer Name" rows="2"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>TRN:</label>
+                        <input type="text" id="customerTRNField" placeholder="Tax Registration Number">
+                    </div>
+                    <div class="field-group">
+                        <label>Address:</label>
+                        <textarea id="customerAddressField" class="auto-expand" placeholder="Customer Address" rows="2"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>Phone:</label>
+                        <input type="tel" id="customerPhoneField" placeholder="Phone Number">
+                    </div>
+                </div>
+                
+                <div class="invoice-right">
+                    <div class="field-group">
+                        <label>Date:</label>
+                        <input type="date" id="invoiceDate" class="editable-field">
+                        <button onclick="toggleEdit('invoiceDate')" class="edit-btn">✏️</button>
+                    </div>
+                    <div class="field-group">
+                        <label>Invoice No:</label>
+                        <input type="text" id="invoiceNumber" class="editable-field" readonly>
+                        <button onclick="toggleEdit('invoiceNumber')" class="edit-btn">✏️</button>
+                    </div>
+                    <div class="field-group">
+                        <label>Address:</label>
+                        <input type="text" id="companyAddress" value="Abu Dhabi, UAE">
+                    </div>
+                    <div class="field-group">
+                        <label>P.O. Box:</label>
+                        <input type="text" id="companyBox" value="130483">
+                    </div>
+                    <div class="field-group">
+                        <label>Company TRN:</label>
+                        <input type="text" id="companyTRN" value="100234725800003">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="items-section">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th style="width: 300px;">Description of Moving Services</th>
+                            <th style="width: 80px;">Quantity</th>
+                            <th style="width: 100px;">Unit Rate (AED)</th>
+                            <th style="width: 100px;">Amount (AED)</th>
+                            <th style="width: 80px;">VAT 5% (AED)</th>
+                            <th style="width: 100px;">Total (AED)</th>
+                            <th class="no-print" style="width: 60px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                        <tr class="item-row">
+                            <td class="item-number">1</td>
+                            <td><textarea class="description-input auto-expand" placeholder="Describe the moving service (e.g., Packing and moving 2-bedroom apartment with fragile items)" rows="2"></textarea></td>
+                            <td><input type="number" class="quantity-input" value="1" min="1"></td>
+                            <td><input type="number" class="rate-input" placeholder="0.00" step="0.01" min="0"></td>
+                            <td class="amount-cell">0.00</td>
+                            <td class="vat-cell">0.00</td>
+                            <td class="total-cell">0.00</td>
+                            <td class="no-print"><button onclick="removeItem(this)" class="btn btn-danger btn-sm">✕</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="table-actions no-print">
+                    <button onclick="addItem()" class="btn btn-primary">➕ Add Service Item</button>
+                    <button onclick="duplicateLastItem()" class="btn btn-secondary">📋 Duplicate Last</button>
+                </div>
+            </div>
+
+            <!-- Totals and Stamp Section -->
+            <div class="totals-section">
+                <div class="stamp-section">
+                    <div class="company-stamp-section">
+                        <img id="companyStamp" class="company-stamp" style="display: none;">
+                    </div>
+                </div>
+                <div class="totals-table">
+                    <div class="total-row">
+                        <span class="total-label">Subtotal:</span>
+                        <span id="subtotal" class="total-value">0.00 AED</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">VAT (5%):</span>
+                        <span id="totalVAT" class="total-value">0.00 AED</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span class="total-label">Grand Total:</span>
+                        <span id="grandTotal" class="total-value">0.00 AED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amount in Words -->
+            <div class="amount-words">
+                <strong>Amount in Words: </strong>
+                <span id="amountInWords">Zero AED only</span>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <div class="contact-left">
+                    <div class="contact-english">
+                        <div class="contact-website">www.alakefakfurnituremovers.com</div>
+                        <div class="contact-phone">📞 +971 508199942 | +971 509100787</div>
+                    </div>
+                </div>
+                <div class="contact-right">
+                    <div class="contact-english">
+                        <div class="contact-email">📧 alakefakcomp@gmail.com</div>
+                        <div class="contact-address">Mohamed Bin Zayed City - ME-10, Abu Dhabi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="invoice-footer">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <p>Receiver Signature</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Invoices Modal -->
+    <div id="savedInvoicesModal" class="modal" style="display: none;">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>📋 Saved Invoices</h2>
+                <div class="modal-actions">
+                    <div class="sync-status">
+                        <span class="sync-indicator online">☁️ Cloud Synced</span>
+                    </div>
+                    <button class="modal-close" onclick="closeSavedInvoices()">✕</button>
+                </div>
+            </div>
+            <div class="modal-filters">
+                <input type="text" id="invoiceSearch" placeholder="🔍 Search by invoice number, customer name, or date..." onkeyup="filterInvoices()">
+                <select id="invoiceFilter" onchange="filterInvoices()">
+                    <option value="all">All Invoices</option>
+                    <option value="recent">Recent (Last 30 days)</option>
+                    <option value="this-month">This Month</option>
+                    <option value="last-month">Last Month</option>
+                </select>
+                <div class="invoice-count">Total: <span id="invoiceCount">0</span> invoices</div>
+            </div>
+            <div id="savedInvoicesList" class="saved-invoices-list"></div>
+        </div>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="emailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📧 Email Invoice</h3>
+                <button class="modal-close" onclick="closeEmailModal()">✕</button>
+            </div>
+            <div class="email-form">
+                <div class="form-group">
+                    <label>To Email:</label>
+                    <input type="email" id="emailTo" placeholder="customer@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Subject:</label>
+                    <input type="text" id="emailSubject" value="Invoice from Alakaifak Mover">
+                </div>
+                <div class="form-group">
+                    <label>Message:</label>
+                    <textarea id="emailMessage" rows="4">Dear Valued Customer,
+
+Please find attached your invoice from Alakaifak Mover - Professional Moving Services.
+
+Thank you for choosing our services!
+
+Best regards,
+Alakaifak Mover Team</textarea>
+                </div>
+                <div class="email-actions">
+                    <button onclick="sendInvoiceEmail()" class="btn btn-primary">📧 Send Email</button>
+                    <button onclick="closeEmailModal()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="message-container"></div>
 
     <script src="script.js"></script>
 </body>
