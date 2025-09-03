@@ -1,0 +1,17 @@
+{
+  "name": "alakaifak-invoice-system",
+  "version": "1.0.0",
+  "description": "Professional Invoice System for Alakaifak Mover",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "dev": "python3 -m http.server 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/alakaifak-invoice-system.git"
+  },
+  "keywords": ["invoice", "professional", "moving", "business"],
+  "author": "Alakaifak Mover",
+  "license": "MIT"
+}
