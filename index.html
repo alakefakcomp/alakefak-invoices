@@ -24,6 +24,7 @@
                 <button onclick="showSavedInvoices()" class="btn btn-secondary">📋 Saved Invoices</button>
                 <button onclick="showCustomerManager()" class="btn btn-success">👥 Customers</button>
                 <button onclick="showTemplateSelector()" class="btn btn-info">🎨 Templates</button>
+                <button onclick="showInvoiceStatus()" class="btn btn-warning">💰 Status</button>
             </div>
         </div>
     </nav>
@@ -54,6 +55,50 @@
             <div class="template-option" data-template="minimalist" onclick="selectTemplate('minimalist')">
                 <div class="template-preview minimalist-preview"></div>
                 <span>Minimalist Black</span>
+            </div>
+            <div class="template-option" data-template="corporate" onclick="selectTemplate('corporate')">
+                <div class="template-preview corporate-preview"></div>
+                <span>Corporate Red</span>
+            </div>
+            <div class="template-option" data-template="luxury" onclick="selectTemplate('luxury')">
+                <div class="template-preview luxury-preview"></div>
+                <span>Luxury Gold</span>
+            </div>
+            <div class="template-option" data-template="ocean" onclick="selectTemplate('ocean')">
+                <div class="template-preview ocean-preview"></div>
+                <span>Ocean Blue</span>
+            </div>
+            <div class="template-option" data-template="forest" onclick="selectTemplate('forest')">
+                <div class="template-preview forest-preview"></div>
+                <span>Forest Green</span>
+            </div>
+            <div class="template-option" data-template="royal" onclick="selectTemplate('royal')">
+                <div class="template-preview royal-preview"></div>
+                <span>Royal Purple</span>
+            </div>
+            <div class="template-option" data-template="uae" onclick="selectTemplate('uae')">
+                <div class="template-preview uae-preview"></div>
+                <span>UAE National</span>
+            </div>
+            <div class="template-option" data-template="government" onclick="selectTemplate('government')">
+                <div class="template-preview government-preview"></div>
+                <span>Government Style</span>
+            </div>
+            <div class="template-option" data-template="banking" onclick="selectTemplate('banking')">
+                <div class="template-preview banking-preview"></div>
+                <span>Banking Format</span>
+            </div>
+            <div class="template-option" data-template="medical" onclick="selectTemplate('medical')">
+                <div class="template-preview medical-preview"></div>
+                <span>Medical Blue</span>
+            </div>
+            <div class="template-option" data-template="construction" onclick="selectTemplate('construction')">
+                <div class="template-preview construction-preview"></div>
+                <span>Construction</span>
+            </div>
+            <div class="template-option" data-template="tech" onclick="selectTemplate('tech')">
+                <div class="template-preview tech-preview"></div>
+                <span>Technology</span>
             </div>
         </div>
     </div>
@@ -100,8 +145,22 @@
                         <input type="tel" id="customerPhone" placeholder="+971 XX XXX XXXX">
                     </div>
                     <div class="form-group">
+                        <label>L.P.O Number</label>
+                        <input type="text" id="customerLPO" placeholder="Local Purchase Order Number (Optional)">
+                    </div>
+                    <div class="form-group">
                         <label>Email Address</label>
                         <input type="email" id="customerEmail" placeholder="customer@email.com">
+                    </div>
+                </div>
+                
+                <!-- Custom Fields Section -->
+                <div class="custom-fields-section">
+                    <h4>🏷️ Custom Fields <small>(Optional additional information)</small></h4>
+                    <div id="customFieldsList" class="custom-fields-list"></div>
+                    <div class="custom-fields-actions">
+                        <button type="button" onclick="addCustomField()" class="btn btn-sm btn-info">➕ Add Custom Field</button>
+                        <button type="button" onclick="clearCustomFields()" class="btn btn-sm btn-warning">🗑️ Clear All Fields</button>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -146,8 +205,8 @@
                         <button onclick="document.getElementById('stampUpload').click()" class="btn btn-sm">📋 Upload Stamp</button>
                         <button onclick="removeAsset('stamp')" class="btn btn-sm btn-danger">Remove</button>
                         <div class="size-control">
-                            <label>Size: <span id="stampSizeValue">60px</span></label>
-                            <input type="range" id="stampSize" min="30" max="120" value="60" onchange="adjustStampSize(this.value)">
+                            <label>Size: <span id="stampSizeValue">250px</span></label>
+                            <input type="range" id="stampSize" min="100" max="400" value="250" onchange="adjustStampSize(this.value)">
                         </div>
                     </div>
                 </div>
@@ -169,13 +228,13 @@
             <!-- Company Header -->
             <div class="company-header">
                 <div class="company-left">
-                    <div class="company-name-english">Alakefak Furniture Movers</div>
+                    <div class="company-name-english">Alakefak Furniture Movers - L.L.C-S.P.C</div>
                 </div>
                 <div class="company-center">
                     <img id="companyLogo" class="company-logo" style="display: none;">
                 </div>
                 <div class="company-right">
-                    <div class="company-name-arabic">مؤسسة على كيفك لنقل الأثاث</div>
+                    <div class="company-name-arabic">مؤسسة على كيفك لنقل الأثاث - ذ.م.م-ش.ش.و</div>
                 </div>
             </div>
 
@@ -203,6 +262,10 @@
                         <label>Phone:</label>
                         <input type="tel" id="customerPhoneField" placeholder="Phone Number">
                     </div>
+                    <div class="field-group">
+                        <label>L.P.O Number:</label>
+                        <input type="text" id="customerLPOField" placeholder="Local Purchase Order Number (Optional)">
+                    </div>
                 </div>
                 
                 <div class="invoice-right">
@@ -213,7 +276,7 @@
                     </div>
                     <div class="field-group">
                         <label>Invoice No:</label>
-                        <input type="text" id="invoiceNumber" class="editable-field" readonly>
+                        <input type="text" id="invoiceNumber" class="editable-field" placeholder="Enter invoice number">
                         <button onclick="toggleEdit('invoiceNumber')" class="edit-btn">✏️</button>
                     </div>
                     <div class="field-group">
@@ -365,18 +428,74 @@
                 </div>
                 <div class="form-group">
                     <label>Message:</label>
-                    <textarea id="emailMessage" rows="4">Dear Valued Customer,
+                    <textarea id="emailMessage" rows="8" readonly style="background: #f8f9fa;">Professional bilingual message will be auto-generated based on invoice details.
 
-Please find attached your invoice from Alakaifak Mover - Professional Moving Services.
+This includes:
+✓ Customer name & invoice details
+✓ Arabic & English text
+✓ Payment options
+✓ Company contact information
 
-Thank you for choosing our services!
-
-Best regards,
-Alakaifak Mover Team</textarea>
+Click "Send Email" to generate the complete message.</textarea>
                 </div>
                 <div class="email-actions">
                     <button onclick="sendInvoiceEmail()" class="btn btn-primary">📧 Send Email</button>
                     <button onclick="closeEmailModal()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Status Modal -->
+    <div id="invoiceStatusModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💰 Invoice Payment Status & Notes</h3>
+                <button class="modal-close" onclick="closeInvoiceStatusModal()">✕</button>
+            </div>
+            <div class="status-form">
+                <div class="form-group">
+                    <label>Payment Status:</label>
+                    <div class="status-options">
+                        <label class="radio-option">
+                            <input type="radio" name="invoiceStatus" value="unpaid" checked>
+                            <span class="status-badge status-unpaid">🔴 Not Paid</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="invoiceStatus" value="paid">
+                            <span class="status-badge status-paid">✅ Paid</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="invoiceStatus" value="partial">
+                            <span class="status-badge status-partial">🟡 Partial Payment</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Payment Date: <small>(Optional)</small></label>
+                    <input type="text" id="paymentDate" placeholder="e.g., 15 January 2025">
+                </div>
+                
+                <div class="form-group">
+                    <label>Payment Amount: <small>(Optional for partial payments)</small></label>
+                    <input type="number" id="paymentAmount" placeholder="Amount received (AED)" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes & Comments:</label>
+                    <textarea id="invoiceNotes" rows="6" placeholder="Add any notes about this invoice:
+• Payment method used
+• Special conditions
+• Customer requests
+• Internal remarks
+• Follow-up actions needed"></textarea>
+                </div>
+                
+                <div class="status-actions">
+                    <button onclick="saveInvoiceStatus()" class="btn btn-success">💾 Save Status & Notes</button>
+                    <button onclick="closeInvoiceStatusModal()" class="btn btn-secondary">Cancel</button>
+                    <button onclick="clearInvoiceStatus()" class="btn btn-warning">🗑️ Clear</button>
                 </div>
             </div>
         </div>
@@ -393,6 +512,62 @@ Alakaifak Mover Team</textarea>
     <!-- Success/Error Messages -->
     <div id="messageContainer" class="message-container"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        // Firebase configuration for Alakaifak Invoice System
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8dmiwA7vkouMELrnzbAXHViyIaqfHYEY",
+            authDomain: "alakefak-invoices.firebaseapp.com",
+            databaseURL: "https://alakefak-invoices-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "alakefak-invoices",
+            storageBucket: "alakefak-invoices.firebasestorage.app",
+            messagingSenderId: "669136896397",
+            appId: "1:669136896397:web:3d1f717547d1a52114bdc4"
+        };
+        
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            window.database = firebase.database();
+            window.firebaseInitialized = true;
+            console.log('🔥 Firebase initialized successfully');
+            console.log('☁️ Cloud sync enabled for Alakaifak Invoice System');
+            
+            // Test connection and update UI
+            window.database.ref('.info/connected').on('value', function(snapshot) {
+                const connected = snapshot.val() === true;
+                const indicators = document.querySelectorAll('.sync-indicator');
+                indicators.forEach(indicator => {
+                    if (connected) {
+                        indicator.className = 'sync-indicator online';
+                        indicator.textContent = '☁️ Cloud Connected';
+                    } else {
+                        indicator.className = 'sync-indicator offline';
+                        indicator.textContent = '📱 Local Only';
+                    }
+                });
+                console.log(connected ? '✅ Connected to Firebase' : '❌ Disconnected from Firebase');
+            });
+            
+        } catch (error) {
+            console.error('❌ Firebase initialization failed:', error);
+            window.database = null;
+            window.firebaseInitialized = false;
+            // Update UI to show offline mode
+            document.addEventListener('DOMContentLoaded', () => {
+                const indicators = document.querySelectorAll('.sync-indicator');
+                indicators.forEach(indicator => {
+                    indicator.className = 'sync-indicator offline';
+                    indicator.textContent = '📱 Local Only';
+                });
+            });
+        }
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>

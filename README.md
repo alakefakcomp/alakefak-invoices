@@ -29,7 +29,7 @@ A comprehensive, modern invoice management system built for **Alakaifak Mover - 
 - **100% Mobile Responsive** - Perfect on phones and tablets
 - **Professional Printing** - Optimized A4 print layouts
 - **PDF Export** - High-quality PDF generation
-- **Cloud Sync Simulation** - Data persistence with sync indicators
+- **Firebase Cloud Sync** - Real-time data synchronization across devices
 
 ### 🎨 User Experience
 - **Modern UI** - Clean, professional interface
@@ -142,17 +142,70 @@ alakefak-invoice-website/
 - **Print Optimization:** CSS @media print rules with A4 formatting
 - **Browser Support:** Chrome, Firefox, Safari, Edge (modern browsers)
 
+## 🔥 Firebase Cloud Sync Setup
+
+To enable real-time data synchronization across devices:
+
+### 1. Create Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project"
+3. Name your project (e.g., "alakaifak-invoices")
+4. Enable Google Analytics (optional)
+5. Click "Create project"
+
+### 2. Set up Realtime Database
+1. In Firebase console, go to "Realtime Database"
+2. Click "Create Database"
+3. Choose "Start in test mode" for development
+4. Select your preferred location
+5. Click "Done"
+
+### 3. Get Firebase Configuration
+1. In project settings (gear icon), go to "General" tab
+2. Scroll to "Your apps" section
+3. Click "Web" icon (</>)
+4. Register your app
+5. Copy the Firebase configuration object
+
+### 4. Update Configuration
+Replace the placeholder configuration in `index.html` (around line 457):
+
+```javascript
+const firebaseConfig = {
+    apiKey: "your-actual-api-key",
+    authDomain: "your-project.firebaseapp.com",
+    databaseURL: "https://your-project-default-rtdb.region.firebasedatabase.app",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId: "your-app-id"
+};
+```
+
+### 5. Test Cloud Sync
+1. Open the application on multiple devices/browsers
+2. Create an invoice or customer on one device
+3. Verify it appears on other devices automatically
+4. Check sync status indicators in the UI
+
 ## 📊 Data Management
 
 ### Local Storage Structure:
-- `alakaifak_invoices_v2` - All saved invoices
-- `alakaifak_customers_v2` - Customer database
-- `alakaifak_settings_v2` - System settings
-- `alakaifak_assets_v2` - Uploaded images (logo, stamp)
-- `alakaifak_counter_v2` - Invoice number counter
+- `alakaifak_invoices_v1` - All saved invoices
+- `alakaifak_customers_v1` - Customer database
+- `alakaifak_settings_v1` - System settings
+- `alakaifak_assets_v1` - Uploaded images (logo, stamp)
+- `alakaifak_counter_v1` - Invoice number counter
 
-### Data Export/Import:
-The system includes built-in data export/import functionality for backup and migration purposes.
+### Firebase Structure:
+- `/invoices/` - Cloud-synced invoice data
+- `/customers/` - Cloud-synced customer data
+
+### Data Sync Features:
+- Automatic cloud backup
+- Real-time synchronization
+- Conflict resolution (cloud data takes precedence)
+- Offline support with sync when connection restored
 
 ## 🚀 Live Demo
 

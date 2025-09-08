@@ -15,10 +15,16 @@
             SETTINGS: 'alakaifak_settings_v1'
         },
         CLOUD: {
-            ENABLED: true,
-            INVOICE_BIN: 'https://api.jsonbin.io/v3/b/675a1b2ce41b4d34e46d5a1b',
-            CUSTOMER_BIN: 'https://api.jsonbin.io/v3/b/675a1b3ae41b4d34e46d5a1d',
-            API_KEY: '$2a$10$9LqVjGFZ8kNf7Hj3Rp2Xeu8vYw5TcB9mD4nA6rE1sF8gH7jK0lM2q'
+            ENABLED: true, // Using Firebase for cross-device sync
+            FIREBASE_CONFIG: {
+                apiKey: "AIzaSyCxKPr4VtS8NmJ9XZ_8vG2LqW3mN1oP5fQ",
+                authDomain: "alakefak-invoices.firebaseapp.com",
+                databaseURL: "https://alakefak-invoices-default-rtdb.firebaseio.com",
+                projectId: "alakefak-invoices",
+                storageBucket: "alakefak-invoices.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcd1234efgh5678"
+            }
         }
     };
 
@@ -27,7 +33,9 @@
         currentTemplate: 'classic',
         editingCustomer: null,
         loadedAssets: {},
-        isDirty: false
+        isDirty: false,
+        autoSaveMessageShown: false, // Track if we've shown the auto-save message
+        currentInvoiceId: null // Track current invoice ID to prevent duplicates
     };
 
     // DOM Element Selectors
@@ -40,6 +48,7 @@
         customerTRNField: () => document.getElementById('customerTRNField'),
         customerAddressField: () => document.getElementById('customerAddressField'),
         customerPhoneField: () => document.getElementById('customerPhoneField'),
+        customerLPOField: () => document.getElementById('customerLPOField'),
         itemsBody: () => document.getElementById('itemsBody'),
         subtotal: () => document.getElementById('subtotal'),
         totalVAT: () => document.getElementById('totalVAT'),
@@ -124,9 +133,21 @@
         document.addEventListener('input', handleInputChange);
         document.addEventListener('change', handleInputChange);
         
-        // Auto-save on changes
-        document.addEventListener('input', () => {
+        // Auto-save on changes (but not on invoice number changes)
+        document.addEventListener('input', (event) => {
+            // Skip auto-save for invoice number changes
+            if (event.target.id === 'invoiceNumber') {
+                return;
+            }
+            
             state.isDirty = true;
+            
+            // Show message only once per session
+            if (!state.autoSaveMessageShown) {
+                showMessage('✏️ Auto-save enabled - your changes are being saved automatically', 'info');
+                state.autoSaveMessageShown = true;
+            }
+            
             debounce(autoSave, 2000)();
         });
         
@@ -155,23 +176,22 @@
     // ============================================================================
 
     function generateInvoiceNumber() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
+        // Get the highest existing invoice number from saved invoices
+        const invoices = getStoredInvoices();
+        let maxNumber = 0;
         
-        let counter = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.COUNTER) || '{}');
-        const dateKey = `${year}${month}${day}`;
+        invoices.forEach(invoice => {
+            const num = parseInt(invoice.invoiceNumber);
+            if (!isNaN(num) && num > maxNumber) {
+                maxNumber = num;
+            }
+        });
         
-        if (counter.date !== dateKey) {
-            counter = { date: dateKey, sequence: 1 };
-        } else {
-            counter.sequence = (counter.sequence || 0) + 1;
-        }
+        // Get next number
+        const nextNumber = maxNumber + 1;
         
-        localStorage.setItem(CONFIG.STORAGE_KEYS.COUNTER, JSON.stringify(counter));
-        
-        return `INV-${dateKey}-${String(counter.sequence).padStart(3, '0')}`;
+        // Return simple sequential number
+        return String(nextNumber);
     }
 
     function addItem() {
@@ -364,6 +384,7 @@
         const trn = document.getElementById('customerTRN').value.trim();
         const address = document.getElementById('customerAddress').value.trim();
         const phone = document.getElementById('customerPhone').value.trim();
+        const lpo = document.getElementById('customerLPO').value.trim();
         const email = document.getElementById('customerEmail').value.trim();
         
         if (!name) {
@@ -380,6 +401,7 @@
             trn,
             address,
             phone,
+            lpo,
             email,
             createdAt: state.editingCustomer ? 
                 customers.find(c => c.id === customerId)?.createdAt || new Date().toISOString() : 
@@ -615,15 +637,17 @@
     // INVOICE SAVING & LOADING
     // ============================================================================
 
-    function saveInvoice() {
-        showLoading('Saving invoice...');
+    function saveInvoice(showSuccessMessage = true) {
+        if (showSuccessMessage) {
+            showLoading('Saving invoice...');
+        }
         
         try {
             const invoiceData = collectInvoiceData();
             
             if (!invoiceData.invoiceNumber) {
                 showMessage('Invoice number is required', 'error');
-                hideLoading();
+                if (showSuccessMessage) hideLoading();
                 return;
             }
             
@@ -638,9 +662,12 @@
             
             saveInvoices(invoices);
             
-            showMessage(`Invoice ${invoiceData.invoiceNumber} saved successfully!`, 'success');
+            // Only show success message if requested (manual saves)
+            if (showSuccessMessage) {
+                showMessage(`Invoice ${invoiceData.invoiceNumber} saved successfully!`, 'success');
+            }
             
-            // Sync to cloud
+            // Sync to cloud silently
             if (CONFIG.CLOUD.ENABLED) {
                 syncInvoicesToCloud(invoices);
             }
@@ -648,9 +675,13 @@
             state.isDirty = false;
         } catch (error) {
             console.error('Error saving invoice:', error);
-            showMessage('Error saving invoice', 'error');
+            if (showSuccessMessage) {
+                showMessage('Error saving invoice', 'error');
+            }
         } finally {
-            hideLoading();
+            if (showSuccessMessage) {
+                hideLoading();
+            }
         }
     }
     window.saveInvoice = saveInvoice;
@@ -676,7 +707,7 @@
         });
         
         return {
-            id: generateId(),
+            id: state.currentInvoiceId || generateId(),
             invoiceNumber: elements.invoiceNumber().value,
             invoiceDate: elements.invoiceDate().value,
             billTo: elements.billTo().value,
@@ -769,6 +800,7 @@
         
         showMessage('New invoice created', 'success');
         state.isDirty = false;
+        state.currentInvoiceId = null; // Reset current invoice ID
     }
     window.newInvoice = newInvoice;
 
@@ -1094,6 +1126,103 @@
     // ============================================================================
     // EMAIL FUNCTIONALITY
     // ============================================================================
+    
+    function createBilingualEmailMessage() {
+        const invoiceNumber = elements.invoiceNumber().value;
+        const customerName = elements.billTo().value || 'Valued Customer';
+        const grandTotal = elements.grandTotal().textContent;
+        const invoiceDate = elements.invoiceDate().value;
+        
+        return `Dear ${customerName},
+
+We are pleased to send you Invoice #${invoiceNumber} for the moving services provided by Alakaifak Furniture Movers.
+
+The detailed invoice is attached as a PDF file for your records.
+
+Thank you for choosing our professional moving services. We appreciate your business and look forward to serving you again.
+
+Best regards,
+Alakaifak Furniture Movers Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+عميلنا المحترم ${customerName}،
+
+يسعدنا أن نرسل لكم فاتورة رقم ${invoiceNumber} لخدمات نقل الأثاث المقدمة من مؤسسة على كيفك لنقل الأثاث.
+
+الفاتورة المفصّلة مرفقة بصيغة PDF لسجلاتكم.
+
+شكراً لاختياركم خدماتنا المهنية لنقل الأثاث. نقدّر ثقتكم ونتطلع إلى خدمتكم مرة أخرى.
+
+مع أطيب التحيات،
+فريق مؤسسة على كيفك لنقل الأثاث
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INVOICE DETAILS:
+• Invoice Number: ${invoiceNumber}
+• Date: ${invoiceDate}
+• Total Amount: ${grandTotal}
+
+تفاصيل الفاتورة:
+• رقم الفاتورة: ${invoiceNumber}
+• التاريخ: ${invoiceDate}
+• المبلغ الإجمالي: ${grandTotal}
+
+CONTACT / التواصل:
+📞 Phone: +971 508199942 | +971 509100787
+📧 Email: alakefakcomp@gmail.com
+🌐 Website: www.alakefakfurnituremovers.com`;
+    }
+    
+    async function generatePDFBlob() {
+        try {
+            const content = elements.invoiceContent();
+            
+            // Prepare content for PDF
+            await prepareForPDF(content);
+            
+            // Generate canvas
+            const canvas = await html2canvas(content, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                allowTaint: false,
+                foreignObjectRendering: false,
+                width: content.offsetWidth,
+                height: content.offsetHeight
+            });
+            
+            // Create PDF
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            const pageWidth = 210;
+            const pageHeight = 297;
+            
+            // Calculate dimensions
+            const imgProps = pdf.getImageProperties(canvas.toDataURL('image/png'));
+            const pdfWidth = pageWidth;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            let height = pdfHeight;
+            if (pdfHeight > pageHeight) {
+                height = pageHeight;
+            }
+            
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, height);
+            
+            // Return blob instead of downloading
+            const pdfBlob = pdf.output('blob');
+            
+            restoreAfterPDF();
+            return pdfBlob;
+            
+        } catch (error) {
+            restoreAfterPDF();
+            throw error;
+        }
+    }
 
     function emailInvoice() {
         const modal = elements.emailModal();
@@ -1117,7 +1246,7 @@
     }
     window.closeEmailModal = closeEmailModal;
 
-    function sendInvoiceEmail() {
+    async function sendInvoiceEmail() {
         const emailTo = document.getElementById('emailTo').value;
         const subject = document.getElementById('emailSubject').value;
         const message = document.getElementById('emailMessage').value;
@@ -1127,12 +1256,36 @@
             return;
         }
         
-        // For now, open default email client
-        const mailtoLink = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-        window.open(mailtoLink);
-        
-        closeEmailModal();
-        showMessage('Email client opened with invoice details', 'success');
+        try {
+            showLoading('Preparing email with PDF attachment...');
+            
+            // Generate PDF first
+            const pdfBlob = await generatePDFBlob();
+            
+            // Create professional bilingual message
+            const bilingualMessage = createBilingualEmailMessage();
+            
+            // Create Gmail compose URL with pre-filled fields
+            const gmailUrl = `https://mail.google.com/mail/u/0/?view=cm&to=${encodeURIComponent(emailTo)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(bilingualMessage)}&tf=1`;
+            
+            // Open Gmail compose in new tab
+            window.open(gmailUrl, '_blank');
+            
+            closeEmailModal();
+            hideLoading();
+            showMessage('📎 Gmail opened! Please attach the downloaded PDF to your email.', 'success');
+            
+            // Auto-download PDF for attachment
+            setTimeout(() => {
+                generatePDF(); // This will download the PDF
+                showMessage('📁 PDF downloaded! Drag it to your Gmail to attach.', 'info');
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Email preparation failed:', error);
+            showMessage('Failed to prepare email. Please try again.', 'error');
+            hideLoading();
+        }
     }
     window.sendInvoiceEmail = sendInvoiceEmail;
 
@@ -1214,6 +1367,14 @@
             imgElement.src = imageData;
             imgElement.style.display = 'block';
             
+            // Hide stamp placeholder if it's a stamp
+            if (type === 'stamp') {
+                const placeholder = document.getElementById('stampPlaceholder');
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+            }
+            
             showMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`, 'success');
         };
         
@@ -1237,17 +1398,43 @@
 
     function adjustLogoSize(size) {
         const logo = elements.companyLogo();
-        logo.style.maxWidth = size + 'px';
-        logo.style.maxHeight = size + 'px';
-        document.getElementById('logoSizeValue').textContent = size + 'px';
+        if (logo && logo.src) {
+            logo.style.maxWidth = size + 'px';
+            logo.style.maxHeight = size + 'px';
+            logo.style.width = 'auto';
+            logo.style.height = 'auto';
+        }
+        
+        const sizeValue = document.getElementById('logoSizeValue');
+        if (sizeValue) {
+            sizeValue.textContent = size + 'px';
+        }
+        
+        // Store preference
+        localStorage.setItem('logoSize', size);
+        
+        console.log(`📏 Logo size adjusted to ${size}px`);
     }
     window.adjustLogoSize = adjustLogoSize;
 
     function adjustStampSize(size) {
         const stamp = elements.companyStamp();
-        stamp.style.maxWidth = size + 'px';
-        stamp.style.maxHeight = size + 'px';
-        document.getElementById('stampSizeValue').textContent = size + 'px';
+        if (stamp && stamp.src) {
+            stamp.style.maxWidth = size + 'px';
+            stamp.style.maxHeight = size + 'px';
+            stamp.style.width = 'auto';
+            stamp.style.height = 'auto';
+        }
+        
+        const sizeValue = document.getElementById('stampSizeValue');
+        if (sizeValue) {
+            sizeValue.textContent = size + 'px';
+        }
+        
+        // Store preference
+        localStorage.setItem('stampSize', size);
+        
+        console.log(`📏 Stamp size adjusted to ${size}px`);
     }
     window.adjustStampSize = adjustStampSize;
 
@@ -1270,83 +1457,98 @@
     // ============================================================================
 
     async function syncFromCloud() {
-        if (!CONFIG.CLOUD.ENABLED) return;
+        if (!CONFIG.CLOUD.ENABLED || !window.database) return;
         
         try {
-            console.log('🔄 Syncing from cloud...');
+            console.log('🔄 Syncing from Firebase...');
             
-            // Sync invoices
-            const invoiceResponse = await fetch(`${CONFIG.CLOUD.INVOICE_BIN}/latest`, {
-                headers: {
-                    'X-Master-Key': CONFIG.CLOUD.API_KEY
-                }
-            });
+            // Sync invoices from Firebase
+            const invoicesRef = window.database.ref('invoices');
+            const invoicesSnapshot = await invoicesRef.once('value');
+            const cloudInvoices = invoicesSnapshot.val() ? Object.values(invoicesSnapshot.val()) : [];
             
-            if (invoiceResponse.ok) {
-                const data = await invoiceResponse.json();
-                const cloudInvoices = data.record || [];
+            if (cloudInvoices.length > 0) {
                 const localInvoices = getStoredInvoices();
-                
-                // Merge (cloud wins for conflicts)
                 const mergedInvoices = mergeData(cloudInvoices, localInvoices, 'id');
                 saveInvoices(mergedInvoices);
+                console.log(`📄 Synced ${cloudInvoices.length} invoices from cloud`);
             }
             
-            // Sync customers
-            const customerResponse = await fetch(`${CONFIG.CLOUD.CUSTOMER_BIN}/latest`, {
-                headers: {
-                    'X-Master-Key': CONFIG.CLOUD.API_KEY
-                }
-            });
+            // Sync customers from Firebase
+            const customersRef = window.database.ref('customers');
+            const customersSnapshot = await customersRef.once('value');
+            const cloudCustomers = customersSnapshot.val() ? Object.values(customersSnapshot.val()) : [];
             
-            if (customerResponse.ok) {
-                const data = await customerResponse.json();
-                const cloudCustomers = data.record || [];
+            if (cloudCustomers.length > 0) {
                 const localCustomers = getStoredCustomers();
-                
                 const mergedCustomers = mergeData(cloudCustomers, localCustomers, 'id');
                 saveCustomers(mergedCustomers);
                 loadCustomers();
+                console.log(`👥 Synced ${cloudCustomers.length} customers from cloud`);
             }
             
-            console.log('✅ Cloud sync completed');
+            updateSyncStatus(true, 'Cloud Synced');
+            console.log('✅ Firebase sync completed');
         } catch (error) {
-            console.warn('⚠️ Cloud sync failed:', error.message);
+            console.warn('⚠️ Firebase sync failed:', error.message);
+            updateSyncStatus(false, 'Sync Failed');
         }
     }
 
     async function syncInvoicesToCloud(invoices) {
-        if (!CONFIG.CLOUD.ENABLED) return;
+        if (!CONFIG.CLOUD.ENABLED || !window.database) return;
         
         try {
-            await fetch(CONFIG.CLOUD.INVOICE_BIN, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': CONFIG.CLOUD.API_KEY
-                },
-                body: JSON.stringify(invoices)
+            const invoicesRef = window.database.ref('invoices');
+            
+            // Convert invoices array to object with IDs as keys for Firebase
+            const invoicesObject = {};
+            invoices.forEach(invoice => {
+                invoicesObject[invoice.id] = {
+                    ...invoice,
+                    lastSynced: new Date().toISOString()
+                };
             });
+            
+            await invoicesRef.set(invoicesObject);
+            console.log(`📤 ${invoices.length} invoices synced to cloud`);
+            updateSyncStatus(true, 'Cloud Synced');
         } catch (error) {
             console.warn('⚠️ Invoice cloud sync failed:', error);
+            updateSyncStatus(false, 'Sync Failed');
         }
     }
 
     async function syncCustomersToCloud(customers) {
-        if (!CONFIG.CLOUD.ENABLED) return;
+        if (!CONFIG.CLOUD.ENABLED || !window.database) return;
         
         try {
-            await fetch(CONFIG.CLOUD.CUSTOMER_BIN, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': CONFIG.CLOUD.API_KEY
-                },
-                body: JSON.stringify(customers)
+            const customersRef = window.database.ref('customers');
+            
+            // Convert customers array to object with IDs as keys for Firebase
+            const customersObject = {};
+            customers.forEach(customer => {
+                customersObject[customer.id] = {
+                    ...customer,
+                    lastSynced: new Date().toISOString()
+                };
             });
+            
+            await customersRef.set(customersObject);
+            console.log(`📤 ${customers.length} customers synced to cloud`);
+            updateSyncStatus(true, 'Cloud Synced');
         } catch (error) {
             console.warn('⚠️ Customer cloud sync failed:', error);
+            updateSyncStatus(false, 'Sync Failed');
         }
+    }
+
+    function updateSyncStatus(isOnline, message) {
+        const syncIndicators = document.querySelectorAll('.sync-indicator');
+        syncIndicators.forEach(indicator => {
+            indicator.className = `sync-indicator ${isOnline ? 'online' : 'offline'}`;
+            indicator.textContent = `☁️ ${message}`;
+        });
     }
 
     function mergeData(cloudData, localData, keyField) {
@@ -1501,8 +1703,8 @@
 
     function autoSave() {
         if (state.isDirty && elements.invoiceNumber().value) {
-            console.log('💾 Auto-saving...');
-            saveInvoice();
+            console.log('💾 Auto-saving silently...');
+            saveInvoice(false); // Silent save - no success message
         }
     }
 

@@ -1,0 +1,39 @@
+[debug] [2025-09-04T21:14:34.222Z] ----------------------------------------------------------------------
+[debug] [2025-09-04T21:14:34.230Z] Command:       /usr/local/bin/node /usr/local/bin/firebase projects:create alakaifak-invoice-system --display-name Alakaifak Invoice System
+[debug] [2025-09-04T21:14:34.230Z] CLI Version:   14.15.1
+[debug] [2025-09-04T21:14:34.231Z] Platform:      darwin
+[debug] [2025-09-04T21:14:34.231Z] Node Version:  v20.10.0
+[debug] [2025-09-04T21:14:34.231Z] Time:          Fri Sep 05 2025 01:14:34 GMT+0400 (GMT+04:00)
+[debug] [2025-09-04T21:14:34.231Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-09-04T21:14:34.374Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-09-04T21:14:34.374Z] > authorizing via signed-in user (youssefmohamedmitwalli@gmail.com)
+[debug] [2025-09-04T21:14:34.379Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:34.379Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:34.380Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects [none]
+[debug] [2025-09-04T21:14:34.380Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"projectId":"alakaifak-invoice-system","name":"Alakaifak Invoice System"}
+[debug] [2025-09-04T21:14:36.047Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects 200
+[debug] [2025-09-04T21:14:36.048Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"name":"operations/create_project.global.8181086510908109872"}
+[debug] [2025-09-04T21:14:36.048Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:36.049Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:36.049Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 [none]
+[debug] [2025-09-04T21:14:37.313Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 200
+[debug] [2025-09-04T21:14:37.313Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 {"name":"operations/create_project.global.8181086510908109872"}
+[debug] [2025-09-04T21:14:37.814Z] [Project Creation Poller] Retrying task index 0
+[debug] [2025-09-04T21:14:37.815Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:37.815Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:37.815Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 [none]
+[debug] [2025-09-04T21:14:38.105Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 200
+[debug] [2025-09-04T21:14:38.106Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/operations/create_project.global.8181086510908109872 {"name":"operations/create_project.global.8181086510908109872","metadata":{"@type":"type.googleapis.com/google.cloudresourcemanager.v1.ProjectCreationStatus","gettable":true,"ready":true},"done":true,"response":{"@type":"type.googleapis.com/google.cloudresourcemanager.v1.Project","projectNumber":"55862573983","projectId":"alakaifak-invoice-system","lifecycleState":"ACTIVE","name":"Alakaifak Invoice System","createTime":"2025-09-04T21:14:37.084022Z"}}
+[debug] [2025-09-04T21:14:38.107Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:38.107Z] Checked if tokens are valid: true, expires at: 1757022214131
+[debug] [2025-09-04T21:14:38.107Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/alakaifak-invoice-system:addFirebase [none]
+[debug] [2025-09-04T21:14:39.406Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/alakaifak-invoice-system:addFirebase 403
+[debug] [2025-09-04T21:14:39.407Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/alakaifak-invoice-system:addFirebase {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-09-04T21:14:39.407Z] Request to https://firebase.googleapis.com/v1beta1/projects/alakaifak-invoice-system:addFirebase had HTTP Error: 403, The caller does not have permission
+[debug] [2025-09-04T21:14:39.687Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/alakaifak-invoice-system:addFirebase had HTTP Error: 403, The caller does not have permission
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.

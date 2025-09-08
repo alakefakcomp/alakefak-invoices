@@ -376,6 +376,7 @@ body {
     max-width: 120px;
     max-height: 120px;
     object-fit: contain;
+    transition: all 0.3s ease;
 }
 
 .company-name-english {
@@ -442,47 +443,58 @@ body {
     letter-spacing: 3px;
 }
 
-/* Invoice Details */
+/* Invoice Details - Ultra Minimized */
 .invoice-details {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.3rem;
+    background: transparent;
+    border-radius: 4px;
+    border: 2px dotted #dee2e6;
 }
 
 .field-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
     display: flex;
     flex-direction: column;
+    border-bottom: 2px dotted #6c757d;
+}
+
+.field-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .field-group label {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.3rem;
-    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.05rem;
+    font-size: 0.7rem;
+    line-height: 1;
 }
 
 .field-group input,
 .field-group textarea {
-    padding: 0.6rem;
+    padding: 0.15rem;
     border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
     background: white;
     transition: border-color 0.3s ease;
     color: #495057;
+    min-height: 1rem;
+    line-height: 1.2;
 }
 
 .field-group input:focus,
 .field-group textarea:focus {
     outline: none;
     border-color: #2c3e50;
-    box-shadow: 0 0 0 2px rgba(44,62,80,0.1);
+    box-shadow: 0 0 0 1px rgba(44,62,80,0.1);
 }
 
 .auto-expand {
@@ -590,20 +602,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 400px;
+    max-width: 300px;
 }
 
 .company-stamp {
-    max-width: 300px;
-    max-height: 300px;
+    max-width: 250px;
+    max-height: 250px;
     object-fit: contain;
 }
 
 .totals-table {
-    background: white;
-    border: 2px solid #2c3e50;
-    border-radius: 6px;
-    padding: 1.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
     min-width: 350px;
 }
 
@@ -778,6 +790,61 @@ body {
 .template-minimalist {
     --primary-color: #212529;
     --primary-light: #f8f9fa;
+}
+
+.template-corporate {
+    --primary-color: #dc3545;
+    --primary-light: #f8d7da;
+}
+
+.template-luxury {
+    --primary-color: #ffc107;
+    --primary-light: #fff3cd;
+}
+
+.template-ocean {
+    --primary-color: #0dcaf0;
+    --primary-light: #cff4fc;
+}
+
+.template-forest {
+    --primary-color: #20c997;
+    --primary-light: #d1ecf1;
+}
+
+.template-royal {
+    --primary-color: #6f42c1;
+    --primary-light: #e2d9f3;
+}
+
+.template-uae {
+    --primary-color: #009639; /* UAE Green */
+    --primary-light: #e8f5e8;
+}
+
+.template-government {
+    --primary-color: #1e3a8a; /* Official Blue */
+    --primary-light: #dbeafe;
+}
+
+.template-banking {
+    --primary-color: #047857; /* Banking Green */
+    --primary-light: #d1fae5;
+}
+
+.template-medical {
+    --primary-color: #1d4ed8; /* Medical Blue */
+    --primary-light: #dbeafe;
+}
+
+.template-construction {
+    --primary-color: #ea580c; /* Safety Orange */
+    --primary-light: #fed7aa;
+}
+
+.template-tech {
+    --primary-color: #7c3aed; /* Tech Purple */
+    --primary-light: #e9d5ff;
 }
 
 .invoice-container .company-header {
@@ -1125,6 +1192,17 @@ body {
 .elegant-preview { background: linear-gradient(135deg, #6f42c1, #e2d9f3); }
 .professional-preview { background: linear-gradient(135deg, #495057, #f8f9fa); }
 .minimalist-preview { background: linear-gradient(135deg, #212529, #f8f9fa); }
+.corporate-preview { background: linear-gradient(135deg, #dc3545, #f8d7da); }
+.luxury-preview { background: linear-gradient(135deg, #ffc107, #fff3cd); }
+.ocean-preview { background: linear-gradient(135deg, #0dcaf0, #cff4fc); }
+.forest-preview { background: linear-gradient(135deg, #20c997, #d1ecf1); }
+.royal-preview { background: linear-gradient(135deg, #6f42c1, #e2d9f3); }
+.uae-preview { background: linear-gradient(135deg, #009639, #e8f5e8); }
+.government-preview { background: linear-gradient(135deg, #1e3a8a, #dbeafe); }
+.banking-preview { background: linear-gradient(135deg, #047857, #d1fae5); }
+.medical-preview { background: linear-gradient(135deg, #1d4ed8, #dbeafe); }
+.construction-preview { background: linear-gradient(135deg, #ea580c, #fed7aa); }
+.tech-preview { background: linear-gradient(135deg, #7c3aed, #e9d5ff); }
 
 /* Customer Management */
 .customer-manager {
