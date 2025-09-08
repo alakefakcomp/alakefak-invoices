@@ -1722,6 +1722,202 @@ CONTACT / التواصل:
     window.toggleEdit = toggleEdit;
 
     // ============================================================================
+    // INVOICE STATUS & NOTES MANAGEMENT
+    // ============================================================================
+
+    function showInvoiceStatus() {
+        const modal = document.getElementById('invoiceStatusModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            loadCurrentInvoiceStatus();
+        }
+    }
+    window.showInvoiceStatus = showInvoiceStatus;
+
+    function closeInvoiceStatusModal() {
+        const modal = document.getElementById('invoiceStatusModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    window.closeInvoiceStatusModal = closeInvoiceStatusModal;
+
+    function saveInvoiceStatus() {
+        const status = document.querySelector('input[name="invoiceStatus"]:checked')?.value || 'unpaid';
+        const paymentDate = document.getElementById('paymentDate')?.value || '';
+        const paymentAmount = document.getElementById('paymentAmount')?.value || '';
+        const notes = document.getElementById('invoiceNotes')?.value || '';
+        
+        const statusData = {
+            status,
+            paymentDate,
+            paymentAmount: paymentAmount ? parseFloat(paymentAmount) : null,
+            notes,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Store status with current invoice
+        const invoiceNumber = elements.invoiceNumber().value;
+        if (invoiceNumber) {
+            const statusKey = `invoice_status_${invoiceNumber}`;
+            localStorage.setItem(statusKey, JSON.stringify(statusData));
+            showMessage('Invoice status saved successfully!', 'success');
+        } else {
+            showMessage('Please save the invoice first before setting status', 'warning');
+        }
+        
+        closeInvoiceStatusModal();
+    }
+    window.saveInvoiceStatus = saveInvoiceStatus;
+
+    function clearInvoiceStatus() {
+        document.querySelectorAll('input[name="invoiceStatus"]')[0].checked = true;
+        document.getElementById('paymentDate').value = '';
+        document.getElementById('paymentAmount').value = '';
+        document.getElementById('invoiceNotes').value = '';
+        showMessage('Status form cleared', 'info');
+    }
+    window.clearInvoiceStatus = clearInvoiceStatus;
+
+    function loadCurrentInvoiceStatus() {
+        const invoiceNumber = elements.invoiceNumber().value;
+        if (invoiceNumber) {
+            const statusKey = `invoice_status_${invoiceNumber}`;
+            const statusData = localStorage.getItem(statusKey);
+            
+            if (statusData) {
+                const data = JSON.parse(statusData);
+                
+                // Set status radio button
+                const statusRadio = document.querySelector(`input[name="invoiceStatus"][value="${data.status}"]`);
+                if (statusRadio) statusRadio.checked = true;
+                
+                // Set other fields
+                if (data.paymentDate) document.getElementById('paymentDate').value = data.paymentDate;
+                if (data.paymentAmount) document.getElementById('paymentAmount').value = data.paymentAmount;
+                if (data.notes) document.getElementById('invoiceNotes').value = data.notes;
+            }
+        }
+    }
+
+    // ============================================================================
+    // CUSTOM FIELDS MANAGEMENT
+    // ============================================================================
+
+    function addCustomField() {
+        const container = document.getElementById('customFieldsList');
+        if (!container) return;
+        
+        const fieldId = 'customField_' + Date.now();
+        
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'custom-field-item';
+        fieldDiv.innerHTML = `
+            <div class="custom-field-row">
+                <input type="text" placeholder="Field Name (e.g., Company Size)" class="custom-field-key" style="flex: 1; margin-right: 10px;">
+                <input type="text" placeholder="Value (e.g., 50 employees)" class="custom-field-value" style="flex: 2; margin-right: 10px;">
+                <button type="button" onclick="removeCustomField(this)" class="btn btn-sm btn-danger">✕</button>
+            </div>
+        `;
+        
+        container.appendChild(fieldDiv);
+    }
+    window.addCustomField = addCustomField;
+
+    function removeCustomField(button) {
+        const fieldItem = button.closest('.custom-field-item');
+        if (fieldItem) {
+            fieldItem.remove();
+        }
+    }
+    window.removeCustomField = removeCustomField;
+
+    function clearCustomFields() {
+        const container = document.getElementById('customFieldsList');
+        if (container) {
+            container.innerHTML = '';
+            showMessage('Custom fields cleared', 'info');
+        }
+    }
+    window.clearCustomFields = clearCustomFields;
+
+    function getCustomFieldsData() {
+        const customFields = {};
+        const fieldItems = document.querySelectorAll('.custom-field-item');
+        
+        fieldItems.forEach(item => {
+            const keyInput = item.querySelector('.custom-field-key');
+            const valueInput = item.querySelector('.custom-field-value');
+            
+            if (keyInput && valueInput && keyInput.value.trim() && valueInput.value.trim()) {
+                customFields[keyInput.value.trim()] = valueInput.value.trim();
+            }
+        });
+        
+        return customFields;
+    }
+
+    function loadCustomFieldsData(customFields) {
+        const container = document.getElementById('customFieldsList');
+        if (!container || !customFields) return;
+        
+        container.innerHTML = '';
+        
+        Object.entries(customFields).forEach(([key, value]) => {
+            addCustomField();
+            const lastField = container.lastElementChild;
+            if (lastField) {
+                lastField.querySelector('.custom-field-key').value = key;
+                lastField.querySelector('.custom-field-value').value = value;
+            }
+        });
+    }
+
+    // ============================================================================
+    // ENHANCED DATE FORMATTING
+    // ============================================================================
+
+    function formatDateToReadable(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        return `${day} ${month} ${year}`;
+    }
+
+    function setupDateFormatting() {
+        const dateInput = elements.invoiceDate();
+        if (dateInput) {
+            // Create a display span for formatted date
+            const displaySpan = document.createElement('span');
+            displaySpan.className = 'date-display';
+            displaySpan.style.cssText = 'display: none; font-family: inherit; font-size: inherit;';
+            
+            dateInput.parentNode.insertBefore(displaySpan, dateInput.nextSibling);
+            
+            // Update display when date changes
+            dateInput.addEventListener('change', function() {
+                if (this.value) {
+                    displaySpan.textContent = formatDateToReadable(this.value);
+                }
+            });
+            
+            // Initialize if date already has value
+            if (dateInput.value) {
+                displaySpan.textContent = formatDateToReadable(dateInput.value);
+            }
+        }
+    }
+
+    // ============================================================================
     // STORAGE FUNCTIONS
     // ============================================================================
 
