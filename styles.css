@@ -525,11 +525,8 @@ body {
     color: white;
     padding: 0.8rem 0.5rem;
     text-align: left;
-    font-family: 'Arial Black', Arial, 'Helvetica Neue', sans-serif;
-    font-weight: 900;
+    font-weight: 800;
     border: 2px solid #2c3e50;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    letter-spacing: 0.5px;
 }
 
 .items-table td {
@@ -544,12 +541,9 @@ body {
 
 .items-table .item-number {
     text-align: center;
-    font-family: 'Arial Black', Arial, 'Helvetica Neue', sans-serif;
-    font-weight: 900;
+    font-weight: 600;
     background: #e9ecef;
-    color: #1a1a1a;
-    text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.15);
-    font-size: 1rem;
+    color: #2c3e50;
 }
 
 .description-input {
@@ -557,13 +551,10 @@ body {
     border: none;
     background: transparent;
     resize: none;
-    font-family: 'Arial Black', Arial, 'Helvetica Neue', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 800;
+    font-size: 0.9rem;
     min-height: 40px;
     padding: 0.3rem;
-    color: #2c3e50;
-    text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.15);
+    color: #495057;
 }
 
 .quantity-input,
@@ -572,23 +563,19 @@ body {
     border: none;
     background: transparent;
     text-align: center;
-    font-family: 'Arial Black', Arial, 'Helvetica Neue', sans-serif;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     padding: 0.3rem;
-    color: #2c3e50;
-    font-weight: 800;
-    text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.15);
+    color: #495057;
+    font-weight: 500;
 }
 
 .amount-cell,
 .vat-cell,
 .total-cell {
     text-align: right;
-    font-weight: 900;
-    font-family: 'Arial Black', Arial, 'Helvetica Neue', sans-serif;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
     color: #1a1a1a;
-    text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.15);
-    font-size: 0.95rem;
 }
 
 .table-actions {
