@@ -271,8 +271,9 @@
                 <div class="invoice-right">
                     <div class="field-group">
                         <label>Date:</label>
-                        <input type="date" id="invoiceDate" class="editable-field">
-                        <button onclick="toggleEdit('invoiceDate')" class="edit-btn">✏️</button>
+                        <input type="date" id="invoiceDate" class="editable-field" style="display: none;">
+                        <div id="invoiceDateDisplay" class="date-display-field" title="Click to change date"></div>
+                        <button onclick="toggleDateEdit()" class="edit-btn" title="Edit date">✏️</button>
                     </div>
                     <div class="field-group">
                         <label>Invoice No:</label>
@@ -443,6 +444,80 @@ Click "Send Email" to generate the complete message.</textarea>
                     <button onclick="closeEmailModal()" class="btn btn-secondary">Cancel</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Invoice Status Page -->
+    <div id="statusPage" class="status-page" style="display: none;">
+        <div class="status-page-header">
+            <div class="status-page-title">
+                <h1><span class="title-icon">💰</span> Invoice Payment Dashboard</h1>
+                <p class="subtitle">Monitor payment status and track all invoice transactions</p>
+            </div>
+            <div class="status-page-actions">
+                <button onclick="hideStatusPage()" class="btn btn-secondary">
+                    <span class="btn-icon">←</span> Back to Invoices
+                </button>
+                <button onclick="showInvoiceStatusModal()" class="btn btn-primary">
+                    <span class="btn-icon">📝</span> Update Status
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status Summary Cards -->
+        <div class="status-summary">
+            <div class="summary-card paid">
+                <div class="summary-icon">✅</div>
+                <div class="summary-content">
+                    <h3 id="paidCount">0</h3>
+                    <p>Paid Invoices</p>
+                </div>
+            </div>
+            <div class="summary-card unpaid">
+                <div class="summary-icon">🔴</div>
+                <div class="summary-content">
+                    <h3 id="unpaidCount">0</h3>
+                    <p>Unpaid Invoices</p>
+                </div>
+            </div>
+            <div class="summary-card partial">
+                <div class="summary-icon">🟡</div>
+                <div class="summary-content">
+                    <h3 id="partialCount">0</h3>
+                    <p>Partial Payments</p>
+                </div>
+            </div>
+            <div class="summary-card total">
+                <div class="summary-icon">📊</div>
+                <div class="summary-content">
+                    <h3 id="totalAmount">0</h3>
+                    <p>Total Outstanding (AED)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-page-content">
+            <div class="status-filters">
+                <div class="filter-group">
+                    <div class="search-box">
+                        <input type="text" id="statusSearch" placeholder="🔍 Search by invoice number, customer name..." onkeyup="filterStatusList()">
+                    </div>
+                    <div class="filter-select">
+                        <select id="statusFilter" onchange="filterStatusList()">
+                            <option value="all">📋 All Status</option>
+                            <option value="paid">✅ Paid Only</option>
+                            <option value="unpaid">🔴 Unpaid Only</option>
+                            <option value="partial">🟡 Partial Only</option>
+                        </select>
+                    </div>
+                    <div class="status-count">
+                        <span class="count-label">Showing:</span> 
+                        <span class="count-number" id="statusCount">0</span> invoices
+                    </div>
+                </div>
+            </div>
+            
+            <div id="statusList" class="status-grid"></div>
         </div>
     </div>
 

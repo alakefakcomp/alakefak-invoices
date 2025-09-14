@@ -108,6 +108,9 @@
         // Initial calculation
         calculateTotals();
         
+        // Setup date formatting
+        setupDateFormatting();
+        
         console.log('✅ Invoice system initialized successfully!');
         showMessage('Invoice system ready!', 'success');
     }
@@ -773,6 +776,9 @@
             // Recalculate totals
             calculateTotals();
             
+            // Update date display
+            updateDateDisplay();
+            
             showMessage(`Invoice ${invoiceData.invoiceNumber} loaded successfully!`, 'success');
             
             state.isDirty = false;
@@ -797,6 +803,9 @@
         addItem();
         
         calculateTotals();
+        
+        // Update date display
+        updateDateDisplay();
         
         showMessage('New invoice created', 'success');
         state.isDirty = false;
@@ -1726,13 +1735,206 @@ CONTACT / التواصل:
     // ============================================================================
 
     function showInvoiceStatus() {
+        // Hide all other views
+        document.querySelector('.main-container').style.display = 'none';
+        elements.customerManager().style.display = 'none';
+        elements.templateSelector().style.display = 'none';
+        
+        // Show status page
+        const statusPage = document.getElementById('statusPage');
+        if (statusPage) {
+            statusPage.style.display = 'block';
+            loadStatusPage();
+        }
+    }
+    window.showInvoiceStatus = showInvoiceStatus;
+    
+    function hideStatusPage() {
+        document.getElementById('statusPage').style.display = 'none';
+        document.querySelector('.main-container').style.display = 'grid';
+    }
+    window.hideStatusPage = hideStatusPage;
+    
+    function loadStatusPage() {
+        const invoices = getStoredInvoices();
+        const statusList = document.getElementById('statusList');
+        
+        if (!statusList) return;
+        
+        statusList.innerHTML = '';
+        
+        if (invoices.length === 0) {
+            statusList.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: #6c757d; grid-column: 1/-1;">
+                    <h3>No invoices found</h3>
+                    <p>Create some invoices first to track their payment status</p>
+                </div>
+            `;
+            document.getElementById('statusCount').textContent = '0';
+            updateSummaryCards([], []);
+            return;
+        }
+        
+        let statusCount = 0;
+        const statusStats = { paid: 0, unpaid: 0, partial: 0 };
+        let totalOutstanding = 0;
+        
+        invoices.forEach(invoice => {
+            const statusKey = `invoice_status_${invoice.invoiceNumber}`;
+            const statusData = localStorage.getItem(statusKey);
+            const status = statusData ? JSON.parse(statusData) : { status: 'unpaid', notes: '', paymentDate: '', paymentAmount: null };
+            
+            // Update statistics
+            statusStats[status.status]++;
+            if (status.status === 'unpaid') {
+                totalOutstanding += invoice.grandTotal || 0;
+            } else if (status.status === 'partial' && status.paymentAmount) {
+                totalOutstanding += (invoice.grandTotal || 0) - status.paymentAmount;
+            }
+            
+            const statusCard = document.createElement('div');
+            statusCard.className = 'status-card';
+            
+            const statusBadge = getStatusBadge(status.status);
+            const formattedDate = formatDateToShort(invoice.invoiceDate);
+            const amount = formatCurrency(invoice.grandTotal || 0);
+            
+            statusCard.innerHTML = `
+                <div class="status-card-header">
+                    <h4>Invoice #${invoice.invoiceNumber}</h4>
+                    ${statusBadge}
+                </div>
+                <div class="status-card-info">
+                    <p><strong>Customer:</strong> ${escapeHtml(invoice.billTo || 'N/A')}</p>
+                    <p><strong>Date:</strong> ${formattedDate}</p>
+                    <p><strong>Amount:</strong> ${amount} AED</p>
+                    ${status.paymentDate ? `<p><strong>Payment Date:</strong> ${status.paymentDate}</p>` : ''}
+                    ${status.paymentAmount ? `<p><strong>Paid Amount:</strong> ${formatCurrency(status.paymentAmount)} AED</p>` : ''}
+                    ${status.notes ? `<p><strong>Notes:</strong> ${escapeHtml(status.notes.substring(0, 100))}${status.notes.length > 100 ? '...' : ''}</p>` : ''}
+                </div>
+                <div class="status-card-actions">
+                    <button onclick="editInvoiceStatus('${invoice.invoiceNumber}')" class="btn btn-primary btn-sm">📝 Edit Status</button>
+                    <button onclick="loadSavedInvoice('${invoice.id}')" class="btn btn-secondary btn-sm">📄 View Invoice</button>
+                </div>
+            `;
+            
+            statusList.appendChild(statusCard);
+            statusCount++;
+        });
+        
+        document.getElementById('statusCount').textContent = statusCount;
+        updateSummaryCards(statusStats, totalOutstanding);
+    }
+    
+    function updateSummaryCards(stats, totalOutstanding) {
+        const paidCountEl = document.getElementById('paidCount');
+        const unpaidCountEl = document.getElementById('unpaidCount');
+        const partialCountEl = document.getElementById('partialCount');
+        const totalAmountEl = document.getElementById('totalAmount');
+        
+        if (paidCountEl) paidCountEl.textContent = stats.paid || 0;
+        if (unpaidCountEl) unpaidCountEl.textContent = stats.unpaid || 0;
+        if (partialCountEl) partialCountEl.textContent = stats.partial || 0;
+        if (totalAmountEl) totalAmountEl.textContent = formatCurrency(totalOutstanding || 0);
+    }
+    
+    function getStatusBadge(status) {
+        switch(status) {
+            case 'paid':
+                return '<span class="status-badge-card status-paid">✅ Paid</span>';
+            case 'partial':
+                return '<span class="status-badge-card status-partial">🟡 Partial</span>';
+            default:
+                return '<span class="status-badge-card status-unpaid">🔴 Unpaid</span>';
+        }
+    }
+    
+    function editInvoiceStatus(invoiceNumber) {
+        // Load the specific invoice for editing
+        const invoices = getStoredInvoices();
+        const invoice = invoices.find(inv => inv.invoiceNumber === invoiceNumber);
+        
+        if (invoice) {
+            loadInvoice(invoice);
+            showInvoiceStatusModal();
+        }
+    }
+    window.editInvoiceStatus = editInvoiceStatus;
+    
+    function filterStatusList() {
+        const searchTerm = document.getElementById('statusSearch').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const statusCards = document.querySelectorAll('.status-card');
+        
+        let visibleCount = 0;
+        const visibleStats = { paid: 0, unpaid: 0, partial: 0 };
+        let visibleOutstanding = 0;
+        
+        statusCards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            let show = true;
+            
+            // Text search
+            if (searchTerm && !text.includes(searchTerm)) {
+                show = false;
+            }
+            
+            // Status filter
+            if (show && statusFilter !== 'all') {
+                const cardStatus = card.querySelector('.status-badge-card');
+                if (cardStatus) {
+                    const cardStatusClass = cardStatus.className;
+                    if (statusFilter === 'paid' && !cardStatusClass.includes('status-paid')) show = false;
+                    if (statusFilter === 'unpaid' && !cardStatusClass.includes('status-unpaid')) show = false;
+                    if (statusFilter === 'partial' && !cardStatusClass.includes('status-partial')) show = false;
+                }
+            }
+            
+            card.style.display = show ? 'block' : 'none';
+            if (show) {
+                visibleCount++;
+                
+                // Update visible statistics
+                const cardStatus = card.querySelector('.status-badge-card');
+                if (cardStatus) {
+                    const cardStatusClass = cardStatus.className;
+                    if (cardStatusClass.includes('status-paid')) {
+                        visibleStats.paid++;
+                    } else if (cardStatusClass.includes('status-unpaid')) {
+                        visibleStats.unpaid++;
+                        // Extract amount from card text
+                        const amountMatch = card.textContent.match(/Amount:\s*([\d,]+\.\d{2})\s*AED/);
+                        if (amountMatch) {
+                            visibleOutstanding += parseFloat(amountMatch[1].replace(/,/g, ''));
+                        }
+                    } else if (cardStatusClass.includes('status-partial')) {
+                        visibleStats.partial++;
+                        // For partial payments, calculate remaining amount
+                        const amountMatch = card.textContent.match(/Amount:\s*([\d,]+\.\d{2})\s*AED/);
+                        const paidMatch = card.textContent.match(/Paid Amount:\s*([\d,]+\.\d{2})\s*AED/);
+                        if (amountMatch) {
+                            const total = parseFloat(amountMatch[1].replace(/,/g, ''));
+                            const paid = paidMatch ? parseFloat(paidMatch[1].replace(/,/g, '')) : 0;
+                            visibleOutstanding += Math.max(0, total - paid);
+                        }
+                    }
+                }
+            }
+        });
+        
+        document.getElementById('statusCount').textContent = visibleCount;
+        updateSummaryCards(visibleStats, visibleOutstanding);
+    }
+    window.filterStatusList = filterStatusList;
+    
+    function showInvoiceStatusModal() {
         const modal = document.getElementById('invoiceStatusModal');
         if (modal) {
             modal.style.display = 'flex';
             loadCurrentInvoiceStatus();
         }
     }
-    window.showInvoiceStatus = showInvoiceStatus;
+    window.showInvoiceStatusModal = showInvoiceStatusModal;
 
     function closeInvoiceStatusModal() {
         const modal = document.getElementById('invoiceStatusModal');
@@ -1893,29 +2095,119 @@ CONTACT / التواصل:
         return `${day} ${month} ${year}`;
     }
 
+    function formatDateToShort(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const months = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+        
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        return `${month} ${day} ${year}`;
+    }
+
     function setupDateFormatting() {
         const dateInput = elements.invoiceDate();
-        if (dateInput) {
-            // Create a display span for formatted date
-            const displaySpan = document.createElement('span');
-            displaySpan.className = 'date-display';
-            displaySpan.style.cssText = 'display: none; font-family: inherit; font-size: inherit;';
-            
-            dateInput.parentNode.insertBefore(displaySpan, dateInput.nextSibling);
+        const dateDisplay = document.getElementById('invoiceDateDisplay');
+        
+        if (dateInput && dateDisplay) {
+            // Initialize - always show display first, hide input
+            dateInput.style.display = 'none';
+            dateDisplay.style.display = 'block';
             
             // Update display when date changes
             dateInput.addEventListener('change', function() {
-                if (this.value) {
-                    displaySpan.textContent = formatDateToReadable(this.value);
+                updateDateDisplay();
+                // Auto-hide input after selection
+                setTimeout(() => {
+                    showDateDisplay();
+                }, 100);
+            });
+            
+            // Hide input when clicking outside
+            dateInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    showDateDisplay();
+                }, 150);
+            });
+            
+            // Handle Enter key to close editing
+            dateInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                    e.preventDefault();
+                    showDateDisplay();
                 }
             });
             
-            // Initialize if date already has value
+            // Make date display clickable
+            dateDisplay.addEventListener('click', function() {
+                showDateInput();
+            });
+            
+            // Initialize date display
+            updateDateDisplay();
+        }
+    }
+    
+    function updateDateDisplay() {
+        const dateInput = elements.invoiceDate();
+        const dateDisplay = document.getElementById('invoiceDateDisplay');
+        
+        if (dateInput && dateDisplay) {
             if (dateInput.value) {
-                displaySpan.textContent = formatDateToReadable(dateInput.value);
+                dateDisplay.textContent = formatDateToShort(dateInput.value);
+                dateDisplay.style.color = '#2d3748';
+            } else {
+                dateDisplay.textContent = 'Click to select date';
+                dateDisplay.style.color = '#a0aec0';
             }
         }
     }
+    
+    function showDateInput() {
+        const dateInput = elements.invoiceDate();
+        const dateDisplay = document.getElementById('invoiceDateDisplay');
+        
+        if (dateInput && dateDisplay) {
+            // Force hide display first
+            dateDisplay.style.display = 'none';
+            // Then show input
+            dateInput.style.display = 'block';
+            dateInput.focus();
+            console.log('✏️ Date input shown');
+        }
+    }
+    
+    function showDateDisplay() {
+        const dateInput = elements.invoiceDate();
+        const dateDisplay = document.getElementById('invoiceDateDisplay');
+        
+        if (dateInput && dateDisplay) {
+            // Force hide input first
+            dateInput.style.display = 'none';
+            // Update and show display
+            updateDateDisplay();
+            dateDisplay.style.display = 'block';
+            console.log('📅 Date display shown');
+        }
+    }
+    
+    function toggleDateEdit() {
+        const dateInput = elements.invoiceDate();
+        const dateDisplay = document.getElementById('invoiceDateDisplay');
+        
+        if (dateInput.style.display === 'none') {
+            showDateInput();
+        } else {
+            showDateDisplay();
+        }
+    }
+    window.toggleDateEdit = toggleDateEdit;
 
     // ============================================================================
     // STORAGE FUNCTIONS
