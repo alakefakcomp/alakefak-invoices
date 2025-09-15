@@ -1094,8 +1094,23 @@
             el.setAttribute('data-hidden-for-pdf', 'true');
         });
         
-        // Convert inputs to text for better PDF rendering
-        const inputs = content.querySelectorAll('input, textarea');
+        // Special handling for date elements - ensure only display is shown
+        const dateInput = content.querySelector('#invoiceDate');
+        const dateDisplay = content.querySelector('#invoiceDateDisplay');
+        if (dateInput && dateDisplay) {
+            // Hide date input completely in PDF
+            dateInput.style.display = 'none';
+            dateInput.setAttribute('data-hidden-for-pdf', 'true');
+            
+            // Ensure date display is visible and has the formatted date
+            dateDisplay.style.display = 'block';
+            if (dateInput.value) {
+                dateDisplay.textContent = formatDateToShort(dateInput.value);
+            }
+        }
+        
+        // Convert other inputs to text for better PDF rendering (skip date input as handled above)
+        const inputs = content.querySelectorAll('input:not(#invoiceDate), textarea');
         inputs.forEach(input => {
             if (input.value) {
                 const span = document.createElement('span');
@@ -1125,6 +1140,16 @@
         
         const replacements = document.querySelectorAll('.pdf-replacement');
         replacements.forEach(span => span.remove());
+        
+        // Restore proper date display state
+        const dateInput = document.querySelector('#invoiceDate');
+        const dateDisplay = document.querySelector('#invoiceDateDisplay');
+        if (dateInput && dateDisplay) {
+            // Ensure input is hidden and display is shown (back to normal state)
+            dateInput.style.display = 'none';
+            dateDisplay.style.display = 'block';
+            updateDateDisplay();
+        }
     }
 
     function printInvoice() {
