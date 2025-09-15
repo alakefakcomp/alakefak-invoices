@@ -1109,6 +1109,20 @@
             }
         }
         
+        // Conditional L.P.O field hiding - only show if it has a value
+        const lpoField = content.querySelector('#customerLPOField');
+        const lpoFieldGroup = content.querySelector('#lpoFieldGroup');
+        if (lpoField && lpoFieldGroup) {
+            if (!lpoField.value || lpoField.value.trim() === '') {
+                // Hide entire L.P.O field group if empty
+                lpoFieldGroup.style.display = 'none';
+                lpoFieldGroup.setAttribute('data-hidden-for-pdf', 'true');
+                console.log('📝 L.P.O field hidden in PDF (empty)');
+            } else {
+                console.log('📝 L.P.O field shown in PDF:', lpoField.value);
+            }
+        }
+        
         // Convert other inputs to text for better PDF rendering (skip date input as handled above)
         const inputs = content.querySelectorAll('input:not(#invoiceDate), textarea');
         inputs.forEach(input => {
@@ -1153,7 +1167,26 @@
     }
 
     function printInvoice() {
+        // Handle L.P.O field visibility before printing
+        const lpoField = document.querySelector('#customerLPOField');
+        const lpoFieldGroup = document.querySelector('#lpoFieldGroup');
+        let lpoHidden = false;
+        
+        if (lpoField && lpoFieldGroup) {
+            if (!lpoField.value || lpoField.value.trim() === '') {
+                lpoFieldGroup.style.display = 'none';
+                lpoHidden = true;
+                console.log('📝 L.P.O field hidden for print (empty)');
+            }
+        }
+        
         window.print();
+        
+        // Restore L.P.O field visibility after print
+        if (lpoHidden && lpoFieldGroup) {
+            lpoFieldGroup.style.display = '';
+            console.log('📝 L.P.O field restored after print');
+        }
     }
     window.printInvoice = printInvoice;
 
